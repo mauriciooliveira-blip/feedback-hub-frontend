@@ -26,37 +26,46 @@ API_URL=https://feedback-hub-backend.onrender.com/api
 
 ## 📁 Estrutura de Arquivos
 
-- `index.html` - Página inicial de teste
+- `index.html` - **Com botões**: Testa API e mostra opções para continuar
+- `index-auto.html` - **Automático**: Testa API e redireciona automaticamente
 - `feedback_hub.html` - Aplicação completa
-- `render.yaml` - Configuração do Render
 
-## 🎯 Funcionalidades
+## 🎯 Opções de Inicialização:
 
-- ✅ Página de login/cadastro
-- ✅ Dashboard com gráficos
-- ✅ Sistema de feedback
-- ✅ Relatórios
-- ✅ Perfil do usuário
-- ✅ Configurações
-- ✅ Modo escuro
+### Opção 1: Com Botões (index.html)
+- ✅ Testa API em background
+- ✅ Mostra resultado do teste
+- ✅ Botão "🚀 Entrar na Aplicação"
+- ✅ Botão "⚡ Pular Teste"
+- ✅ **Recomendado** para verificar se tudo funciona
 
-## 🔧 Configuração
+### Opção 2: Automático (index-auto.html)
+- ✅ Testa API em background
+- ✅ Contagem regressiva (3 segundos)
+- ✅ Redireciona automaticamente
+- ✅ Clique para pular
+- ✅ **Mais rápido** para usuários recorrentes
 
-A aplicação está configurada para funcionar com:
-- **Backend**: `https://feedback-hub-backend.onrender.com/api`
-- **CORS**: Habilitado para todas as origens
-- **Responsivo**: Funciona em desktop e mobile
+### Opção 3: Direto no App (feedback_hub.html)
+- ✅ Vai direto para o app completo
+- ✅ Sem testes ou redirecionamentos
+- ✅ **Para desenvolvimento** local
 
-## 📱 Como Usar
+## 🔧 Como Escolher a Opção:
 
-1. Acesse `https://feedback-hub-frontend.onrender.com`
-2. Será redirecionado para `feedback_hub.html` (app completo)
-3. Faça login ou cadastre-se
-4. Use todas as funcionalidades
+### Para Deploy (Recomendado):
+Use `index.html` - permite verificar se a API está funcionando antes de entrar no app.
+
+### Para Desenvolvimento:
+Use `feedback_hub.html` - vai direto para o app sem redirecionamentos.
+
+### Para Usuários Frequentes:
+Use `index-auto.html` - redireciona automaticamente após teste rápido.
 
 ## ✅ Status
 
-- ✅ Deploy como Static Site no Render
+- ✅ Múltiplas opções de inicialização
+- ✅ Teste de API integrado
+- ✅ Deploy como Static Site
 - ✅ Conectado ao backend remoto
-- ✅ Página de teste funcional
-- ✅ Aplicação completa integrada
+- ✅ Flexibilidade para diferentes usos
