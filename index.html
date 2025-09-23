@@ -314,40 +314,58 @@
 
         // Mostrar tela de login por padrão
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM carregado, mostrando tela de login...');
+            console.log('DOM carregado, configurando telas...');
             
-            // Mostrar tela de login imediatamente
-            const loginScreen = document.getElementById('login-screen');
-            loginScreen.classList.add('flex');
-            loginScreen.classList.remove('hidden');
+            // Garantir que apenas uma tela esteja visível por vez
+            function showScreen(screenId) {
+                console.log('Mostrando tela:', screenId);
+                // Esconder todas as telas
+                document.querySelectorAll('.app-screen').forEach(screen => {
+                    screen.classList.add('hidden');
+                    screen.classList.remove('flex');
+                });
+                
+                // Mostrar a tela desejada
+                const targetScreen = document.getElementById(screenId);
+                if (targetScreen) {
+                    targetScreen.classList.remove('hidden');
+                    targetScreen.classList.add('flex');
+                    console.log('Tela exibida:', screenId);
+                } else {
+                    console.error('Tela não encontrada:', screenId);
+                }
+            }
             
-            // Navegação entre login e registro
-            document.getElementById('show-register').addEventListener('click', function(e) {
+            // Configurar navegação
+            document.getElementById('show-register')?.addEventListener('click', function(e) {
                 e.preventDefault();
-                console.log('Mostrando tela de registro...');
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('register-screen').classList.remove('hidden');
-                document.getElementById('register-screen').classList.add('flex');
+                showScreen('register-screen');
             });
             
-            document.getElementById('back-to-login').addEventListener('click', function() {
-                console.log('Voltando para o login...');
-                document.getElementById('register-screen').classList.add('hidden');
-                document.getElementById('login-screen').classList.remove('hidden');
-                document.getElementById('login-screen').classList.add('flex');
+            document.getElementById('back-to-login')?.addEventListener('click', function(e) {
+                e.preventDefault();
+                showScreen('login-screen');
             });
             
             // Simular login
-            document.getElementById('login-form').addEventListener('submit', function(e) {
+            document.getElementById('login-form')?.addEventListener('submit', function(e) {
                 e.preventDefault();
                 console.log('Tentando fazer login...');
-                document.getElementById('login-screen').classList.add('hidden');
-                document.getElementById('app').classList.remove('hidden');
+                showScreen('app');
                 initializeCharts();
             });
             
+            // Simular cadastro
+            document.getElementById('register-form')?.addEventListener('submit', function(e) {
+                e.preventDefault();
+                console.log('Tentando cadastrar...');
+                // Aqui você pode adicionar a lógica de cadastro
+                alert('Cadastro realizado com sucesso!');
+                showScreen('login-screen');
+            });
+            
             // Simular logout
-            document.getElementById('logout-btn').addEventListener('click', function() {
+            document.getElementById('logout-btn')?.addEventListener('click', function() {
                 console.log('Fazendo logout...');
                 document.getElementById('app').classList.add('hidden');
                 document.getElementById('login-screen').classList.remove('hidden');
