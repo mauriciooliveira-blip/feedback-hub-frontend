@@ -1,0 +1,10 @@
+services:
+  - type: web
+    name: feedback-hub-frontend
+    env: static
+    plan: free
+    buildCommand: "echo 'Frontend já está pronto - apenas arquivos estáticos'"
+    staticPublishPath: "."
+    envVars:
+      - key: API_URL
+        value: https://feedback-hub-backend.onrender.com/api
