@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feedback Hub</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .app-screen, .app-view { display: none; }
+        .active { display: block; }
+        .active-flex { display: flex; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; }
+        .dark ::-webkit-scrollbar-track { background: #2d3748; }
+        ::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #555; }
+        .chart-container { position: relative; height: 40vh; width: 100%; }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300">
+
+    <!-- ===== Login Screen ===== -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4 active">
+        <div class="w-full max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-xl p-8">
+            <h2 class="text-3xl font-bold text-center text-indigo-600 dark:text-indigo-400 mb-2">Feedback Hub</h2>
+            <p class="text-center text-gray-500 dark:text-gray-400 mb-8">Bem-vindo(a) de volta!</p>
+            <form id="login-form">
+                <div class="mb-4">
+                    <label for="login-email" class="block text-sm font-medium mb-2">Email</label>
+                    <input type="email" id="login-email" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <div class="mb-6">
+                    <label for="login-password" class="block text-sm font-medium mb-2">Senha</label>
+                    <input type="password" id="login-password" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 transition-colors duration-300">Entrar</button>
+            </form>
+            <p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p>
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+                Não tem uma conta? <a href="#" id="go-to-signup" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">Cadastre-se</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- ===== Signup Screen ===== -->
+    <div id="signup-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white dark:bg-gray-800 shadow-lg rounded-xl p-8">
+            <h2 class="text-3xl font-bold text-center text-indigo-600 dark:text-indigo-400 mb-2">Crie sua Conta</h2>
+            <p class="text-center text-gray-500 dark:text-gray-400 mb-8">Comece a dar e receber feedbacks.</p>
+            <form id="signup-form">
+                <div class="grid grid-cols-1 gap-4">
+                    <input type="text" name="name" placeholder="Nome Completo" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg" required>
+                    <input type="email" name="email" placeholder="Email Corporativo" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg" required>
+                    <input type="password" name="password" placeholder="Senha" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" title="Mínimo 8 caracteres, com maiúscula, minúscula, número e caractere especial." required>
+                    <input type="password" name="confirmPassword" placeholder="Confirmar Senha" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg" required>
+                    <select name="department" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg" required>
+                        <option value="">Selecione o Setor</option>
+                        <option value="Tecnologia">Tecnologia</option><option value="RH">Recursos Humanos</option><option value="Marketing">Marketing</option><option value="Vendas">Vendas</option>
+                    </select>
+                    <select name="role" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg" required>
+                        <option value="">Selecione o Cargo</option>
+                        <option value="usuario">Usuário</option><option value="gestor">Gestor</option><option value="admin">Administrador</option>
+                    </select>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700 mt-6">Cadastrar</button>
+            </form>
+            <p id="signup-error" class="text-red-500 text-sm mt-4 text-center"></p>
+            <p class="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
+                Já tem uma conta? <a href="#" id="go-to-login" class="font-medium text-indigo-600 dark:text-indigo-400 hover:underline">Faça Login</a>
+            </p>
+        </div>
+    </div>
+    
+    <!-- O resto do HTML é idêntico ao anterior... -->
+    <!-- ... as telas de dashboard, equipe, etc ... -->
+
+    <!-- ===== Main App Screen ===== -->
+    <div id="app-screen" class="min-h-screen lg:flex">
+        <!-- Sidebar -->
+        <aside class="w-full lg:w-64 bg-white dark:bg-gray-800 p-6 lg:h-screen lg:sticky lg:top-0 flex flex-col">
+            <div>
+                <h1 class="text-2xl font-bold text-indigo-600 dark:text-indigo-400 mb-8">Feedback Hub</h1>
+                <nav id="main-nav" class="space-y-2"></nav>
+            </div>
+            <div class="mt-auto pt-8">
+                 <button id="logout-button" class="w-full flex items-center justify-center gap-2 text-red-500 font-medium py-2 px-4 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50">
+                    <i data-lucide="log-out" class="w-5 h-5"></i>Sair
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+            <div id="dashboard-view" class="app-view"><h2 class="text-3xl font-bold mb-6">Dashboard</h2><div class="chart-container"><canvas id="feedbackChart"></canvas></div></div>
+            <div id="team-view" class="app-view"><h2 class="text-3xl font-bold mb-6">Minha Equipe</h2><div id="team-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div></div>
+            <div id="send-feedback-view" class="app-view"><h2 class="text-3xl font-bold mb-6">Enviar Feedback</h2><div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-8"><form id="feedback-form"><div class="mb-4"><label for="feedback-title" class="block text-sm font-medium mb-2">Título</label><input type="text" id="feedback-title" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border rounded-lg" required></div><div class="mb-4"><label class="block text-sm font-medium mb-2">Classificação</label><div class="flex gap-4"><label class="flex items-center gap-2 p-3 border dark:border-gray-600 rounded-lg cursor-pointer"><input type="radio" name="classification" value="ruim" class="form-radio text-red-500"> Ruim</label><label class="flex items-center gap-2 p-3 border dark:border-gray-600 rounded-lg cursor-pointer"><input type="radio" name="classification" value="media" class="form-radio text-yellow-500"> Média</label><label class="flex items-center gap-2 p-3 border dark:border-gray-600 rounded-lg cursor-pointer"><input type="radio" name="classification" value="boa" class="form-radio text-green-500" checked> Boa</label></div></div><div class="mb-4"><label for="feedback-recipient" class="block text-sm font-medium mb-2">Para quem?</label><select id="feedback-recipient" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border rounded-lg" required></select></div><div class="mb-6"><label for="feedback-description" class="block text-sm font-medium mb-2">Descrição</label><textarea id="feedback-description" rows="5" class="w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border rounded-lg" required></textarea></div><button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-indigo-700">Enviar Feedback</button></form><p id="feedback-success" class="text-green-500 text-sm mt-4 text-center"></p></div></div>
+            <div id="reports-view" class="app-view"><div class="flex flex-wrap items-center justify-between gap-4 mb-6"><h2 class="text-3xl font-bold">Relatórios</h2><button id="export-excel-btn" class="bg-green-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-700 flex items-center gap-2"><i data-lucide="file-spreadsheet" class="w-5 h-5"></i>Exportar</button></div><div class="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-md"><table id="reports-table" class="w-full text-left"><thead class="border-b dark:border-gray-700"><tr><th class="p-4">Data</th><th class="p-4">De</th><th class="p-4">Para</th><th class="p-4">Título</th><th class="p-4">Classificação</th></tr></thead><tbody id="reports-table-body"></tbody></table></div></div>
+            <div id="profile-view" class="app-view"><h2 class="text-3xl font-bold mb-6">Meu Perfil</h2><div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6"><div class="md:col-span-1 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 flex flex-col items-center text-center"><img id="profile-pic" src="https://placehold.co/128x128" alt="Foto do Perfil" class="w-32 h-32 rounded-full mb-4 object-cover"><h3 id="profile-name-display" class="text-xl font-bold"></h3><p id="profile-role-display" class="text-gray-500 dark:text-gray-400"></p><p id="profile-department-display" class="text-gray-500 dark:text-gray-400"></p></div><div class="md:col-span-2 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"><h3 class="text-lg font-semibold mb-4 border-b pb-2 dark:border-gray-700">Informações da Conta</h3><form id="profile-form"><div class="mb-4"><label for="profile-name" class="block text-sm font-medium">Nome</label><input type="text" id="profile-name" class="mt-1 w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border rounded-lg"></div><div class="mb-4"><label for="profile-email" class="block text-sm font-medium">Email</label><input type="email" id="profile-email" class="mt-1 w-full px-4 py-2 bg-gray-200 dark:bg-gray-600 border rounded-lg" disabled></div><div class="mb-4"><label for="profile-photo-url" class="block text-sm font-medium">URL da Foto</label><input type="text" id="profile-photo-url" class="mt-1 w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border rounded-lg"></div><h3 class="text-lg font-semibold my-4 border-b pb-2 dark:border-gray-700">Alterar Senha</h3><div class="mb-4"><label for="profile-new-password" class="block text-sm font-medium">Nova Senha (deixe em branco para não alterar)</label><input type="password" id="profile-new-password" class="mt-1 w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 border rounded-lg"></div><button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-5 rounded-lg hover:bg-indigo-700">Salvar Alterações</button></form></div></div></div>
+            <div id="settings-view" class="app-view"><h2 class="text-3xl font-bold mb-6">Configurações</h2><div class="max-w-2xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-md p-8"><div class="flex items-center justify-between"><span class="font-medium">Modo Escuro (Blackout)</span><label for="dark-mode-toggle" class="relative inline-flex items-center cursor-pointer"><input type="checkbox" id="dark-mode-toggle" class="sr-only peer"><div class="w-11 h-6 bg-gray-200 rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div></label></div></div></div>
+        </main>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // ===== CONFIGURAÇÕES GLOBAIS =====
+        const API_URL = 'http://localhost:3000/api';
+        let state = {
+            currentUser: null,
+            currentView: 'dashboard-view',
+            feedbackChart: null
+        };
+
+        // ===== SELETORES DE DOM =====
+        const screens = { login: document.getElementById('login-screen'), signup: document.getElementById('signup-screen'), app: document.getElementById('app-screen') };
+        const views = { dashboard: document.getElementById('dashboard-view'), team: document.getElementById('team-view'), sendFeedback: document.getElementById('send-feedback-view'), reports: document.getElementById('reports-view'), profile: document.getElementById('profile-view'), settings: document.getElementById('settings-view') };
+
+        // ===== FUNÇÃO AUXILIAR PARA REQUISIÇÕES À API =====
+        const apiRequest = async (endpoint, method = 'GET', body = null) => {
+            const headers = { 'Content-Type': 'application/json' };
+            const token = localStorage.getItem('feedbackHubToken');
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
+            const config = { method, headers };
+            if (body) {
+                config.body = JSON.stringify(body);
+            }
+
+            const response = await fetch(`${API_URL}${endpoint}`, config);
+
+            if (response.status === 401 || response.status === 403) {
+                handleLogout();
+                throw new Error("Não autorizado.");
+            }
+            
+            const data = await response.json();
+
+            if (!response.ok) {
+                 throw new Error(data.message || 'Ocorreu um erro.');
+            }
+            
+            return data;
+        };
+        
+        // ===== NAVEGAÇÃO E UI =====
+        const showScreen = (screenName) => {
+            Object.values(screens).forEach(s => s.classList.replace('active', 'hidden') || s.classList.replace('active-flex', 'hidden'));
+            screens[screenName].classList.replace('hidden', screenName === 'app' ? 'active-flex' : 'active');
+        };
+
+        const showView = (viewName) => {
+            state.currentView = viewName;
+            Object.values(views).forEach(v => v.classList.remove('active'));
+            document.getElementById(viewName).classList.add('active');
+            renderActiveView();
+            updateNavHighlight();
+        };
+
+        const updateNavHighlight = () => {
+            document.querySelectorAll('#main-nav a').forEach(link => {
+                link.classList.remove('bg-indigo-100', 'dark:bg-indigo-900/50', 'text-indigo-700', 'dark:text-indigo-300');
+                if (link.dataset.view === state.currentView) {
+                    link.classList.add('bg-indigo-100', 'dark:bg-indigo-900/50', 'text-indigo-700', 'dark:text-indigo-300');
+                }
+            });
+        };
+
+        // ===== AUTENTICAÇÃO =====
+        const handleLogin = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            const errorEl = document.getElementById('login-error');
+            errorEl.textContent = '';
+            try {
+                const data = await apiRequest('/login', 'POST', { email, password });
+                localStorage.setItem('feedbackHubToken', data.token);
+                state.currentUser = data.user;
+                initializeApp();
+            } catch (error) {
+                errorEl.textContent = error.message;
+            }
+        };
+
+        const handleSignup = async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const errorEl = document.getElementById('signup-error');
+            errorEl.textContent = '';
+
+            if (data.password !== data.confirmPassword) {
+                errorEl.textContent = 'As senhas não coincidem.';
+                return;
+            }
+            try {
+                const result = await apiRequest('/register', 'POST', data);
+                alert(result.message);
+                showScreen('login');
+                e.target.reset();
+            } catch (error) {
+                errorEl.textContent = error.message;
+            }
+        };
+
+        const handleLogout = () => {
+            localStorage.removeItem('feedbackHubToken');
+            state.currentUser = null;
+            showScreen('login');
+        };
+
+        const checkSession = async () => {
+            const token = localStorage.getItem('feedbackHubToken');
+            if (token) {
+                try {
+                    // Tenta buscar o perfil para validar o token
+                    const userProfile = await apiRequest('/profile');
+                    state.currentUser = userProfile;
+                    initializeApp();
+                } catch (error) {
+                    // Se o token for inválido, limpa e vai para o login
+                    handleLogout();
+                }
+            }
+        };
+
+        // ===== INICIALIZAÇÃO DA APLICAÇÃO =====
+        const initializeApp = () => {
+            renderNav();
+            showScreen('app');
+            showView('dashboard-view');
+        };
+
+        // ===== RENDERIZAÇÃO DAS VIEWS =====
+        const renderNav = () => {
+            const nav = document.getElementById('main-nav');
+            const user = state.currentUser;
+            let navItems = `<a href="#" data-view="dashboard-view" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 font-medium"><i data-lucide="layout-dashboard" class="w-5 h-5"></i> Dashboard</a>`;
+            if (user.role === 'admin' || user.role === 'gestor') {
+                navItems += `<a href="#" data-view="team-view" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 font-medium"><i data-lucide="users" class="w-5 h-5"></i> Minha Equipe</a>`;
+            }
+            navItems += `<a href="#" data-view="send-feedback-view" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 font-medium"><i data-lucide="send" class="w-5 h-5"></i> Enviar Feedback</a>`;
+            if (user.role === 'admin' || user.role === 'gestor') {
+                navItems += `<a href="#" data-view="reports-view" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 font-medium"><i data-lucide="bar-chart-3" class="w-5 h-5"></i> Relatórios</a>`;
+            }
+            navItems += `<a href="#" data-view="profile-view" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 font-medium"><i data-lucide="user-circle" class="w-5 h-5"></i> Perfil</a><a href="#" data-view="settings-view" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 font-medium"><i data-lucide="settings" class="w-5 h-5"></i> Configurações</a>`;
+            nav.innerHTML = navItems;
+            lucide.createIcons();
+            nav.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', (e) => { e.preventDefault(); showView(link.dataset.view); });
+            });
+        };
+
+        const renderActiveView = () => {
+            switch (state.currentView) {
+                case 'dashboard-view': renderDashboard(); break;
+                case 'team-view': renderTeam(); break;
+                case 'send-feedback-view': renderSendFeedback(); break;
+                case 'reports-view': renderReports(); break;
+                case 'profile-view': renderProfile(); break;
+            }
+        };
+
+        const renderDashboard = async () => {
+            try {
+                const feedbacks = await apiRequest('/feedbacks');
+                const counts = { boa: 0, media: 0, ruim: 0 };
+                feedbacks.forEach(f => counts[f.classification]++);
+                const ctx = document.getElementById('feedbackChart').getContext('2d');
+                if (state.feedbackChart) state.feedbackChart.destroy();
+                state.feedbackChart = new Chart(ctx, { type: 'bar', data: { labels: ['Bons', 'Médios', 'Ruins'], datasets: [{ label: 'Feedbacks', data: [counts.boa, counts.media, counts.ruim], backgroundColor: ['rgba(74, 222, 128, 0.6)', 'rgba(250, 204, 21, 0.6)', 'rgba(239, 68, 68, 0.6)'], borderColor: ['#16a34a', '#f59e0b', '#dc2626'], borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, plugins: { legend: { display: false }, title: { display: true, text: 'Média Geral de Feedbacks' } } } });
+            } catch (error) { console.error(error); }
+        };
+
+        const renderTeam = async () => {
+            try {
+                const teamMembers = await apiRequest('/team');
+                document.getElementById('team-list').innerHTML = teamMembers.map(member => `<div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 text-center"><img src="${member.photoUrl}" alt="${member.name}" class="w-20 h-20 rounded-full mx-auto mb-3 object-cover"><h4 class="font-semibold">${member.name}</h4><p class="text-sm text-gray-500 dark:text-gray-400 capitalize">${member.role}</p></div>`).join('');
+            } catch (error) { console.error(error); }
+        };
+
+        const renderSendFeedback = async () => {
+            try {
+                const usersToSelect = await apiRequest('/users');
+                document.getElementById('feedback-recipient').innerHTML = usersToSelect.map(u => `<option value="${u.id}">${u.name}</option>`).join('');
+                document.getElementById('feedback-success').textContent = '';
+                document.getElementById('feedback-form').reset();
+            } catch (error) { console.error(error); }
+        };
+
+        const renderReports = async () => {
+            try {
+                const feedbacks = await apiRequest('/feedbacks');
+                const classificationMap = { boa: '<span class="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300">Boa</span>', media: '<span class="px-2 py-1 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300">Média</span>', ruim: '<span class="px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">Ruim</span>' };
+                document.getElementById('reports-table-body').innerHTML = feedbacks.length > 0 ? feedbacks.map(f => `<tr class="border-b dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"><td class="p-4">${new Date(f.date + 'T00:00:00').toLocaleDateString('pt-BR')}</td><td class="p-4">${f.fromUserName}</td><td class="p-4">${f.toUserName}</td><td class="p-4">${f.title}</td><td class="p-4">${classificationMap[f.classification]}</td></tr>`).join('') : '<tr><td colspan="5" class="p-4 text-center">Nenhum feedback encontrado.</td></tr>';
+            } catch (error) { console.error(error); }
+        };
+
+        const renderProfile = () => {
+            const user = state.currentUser;
+            document.getElementById('profile-pic').src = user.photoUrl;
+            document.getElementById('profile-name-display').textContent = user.name;
+            document.getElementById('profile-role-display').textContent = user.role.charAt(0).toUpperCase() + user.role.slice(1);
+            document.getElementById('profile-department-display').textContent = user.department;
+            document.getElementById('profile-name').value = user.name;
+            document.getElementById('profile-email').value = user.email;
+            document.getElementById('profile-photo-url').value = user.photoUrl;
+            document.getElementById('profile-new-password').value = '';
+        };
+        
+        // ===== EVENT LISTENERS PARA AÇÕES =====
+        document.getElementById('login-form').addEventListener('submit', handleLogin);
+        document.getElementById('signup-form').addEventListener('submit', handleSignup);
+        document.getElementById('logout-button').addEventListener('click', handleLogout);
+        document.getElementById('go-to-signup').addEventListener('click', (e) => { e.preventDefault(); showScreen('signup'); });
+        document.getElementById('go-to-login').addEventListener('click', (e) => { e.preventDefault(); showScreen('login'); });
+
+        document.getElementById('feedback-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                toUserId: parseInt(document.getElementById('feedback-recipient').value),
+                title: document.getElementById('feedback-title').value,
+                classification: document.querySelector('input[name="classification"]:checked').value,
+                description: document.getElementById('feedback-description').value,
+            };
+            try {
+                await apiRequest('/feedbacks', 'POST', data);
+                const successEl = document.getElementById('feedback-success');
+                successEl.textContent = 'Feedback enviado com sucesso!';
+                setTimeout(() => successEl.textContent = '', 3000);
+                e.target.reset();
+            } catch (error) { alert(error.message); }
+        });
+        
+        document.getElementById('profile-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = {
+                name: document.getElementById('profile-name').value,
+                photoUrl: document.getElementById('profile-photo-url').value,
+                password: document.getElementById('profile-new-password').value || null // Envia null se vazio
+            };
+            try {
+                const result = await apiRequest('/profile', 'PUT', data);
+                // Atualiza dados locais do usuário após sucesso
+                state.currentUser.name = data.name;
+                state.currentUser.photoUrl = data.photoUrl;
+                renderProfile();
+                alert(result.message);
+            } catch(error) {
+                alert(error.message);
+            }
+        });
+        
+        // ===== INICIALIZAÇÃO =====
+        checkSession();
+    });
+    </script>
+</body>
+</html>
+```
+
+### 🚀 Como Fazer Funcionar: Guia Rápido
+
+Siga os mesmos passos do guia anterior, mas agora com os arquivos atualizados.
+
+1.  **Pare o Servidor Antigo:** Se o seu terminal ainda estiver rodando o `server.js` antigo, pressione `Ctrl + C` para pará-lo.
+
+2.  **Substitua os Arquivos:**
+    * Vá para a sua pasta do back-end (`feedback-hub-backend`).
+    * **Delete** o `server.js` antigo e salve o novo `server.js (Atualizado)` no lugar.
+    * Se você salvou o `feedback_hub.html` em algum lugar, substitua-o completamente pela nova versão `Feedback Hub (Front-end Conectado)`.
+
+3.  **Inicie o Servidor Novamente:**
+    * No terminal, dentro da pasta do back-end, execute o comando:
+        ```bash
+        node server.js
+        
+
