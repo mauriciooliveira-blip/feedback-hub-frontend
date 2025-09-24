@@ -363,13 +363,64 @@
                 initializeCharts();
             });
             
-            // Simular cadastro
+            // Configurar cadastro
             document.getElementById('register-form')?.addEventListener('submit', function(e) {
                 e.preventDefault();
                 console.log('Tentando cadastrar...');
-                // Aqui você pode adicionar a lógica de cadastro
-                alert('Cadastro realizado com sucesso!');
-                showScreen('login-screen');
+                
+                // Obter valores do formulário
+                const name = document.getElementById('reg-name')?.value;
+                const email = document.getElementById('reg-email')?.value;
+                const password = document.getElementById('reg-password')?.value;
+                const sector = document.getElementById('reg-sector')?.value;
+                const role = document.getElementById('reg-role')?.value;
+                
+                // Validação
+                if (!name || !email || !password || !sector || !role) {
+                    alert('Por favor, preencha todos os campos!');
+                    return;
+                }
+                
+                // Mostrar loading
+                const submitBtn = e.target.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = 'Criando conta...';
+                
+                // Fazer a requisição para a API
+                fetch('https://feedback-hub-backend.onrender.com/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name: name,
+                        email: email,
+                        password: password,
+                        sector: sector,
+                        role: role
+                    })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => { throw new Error(err.message || 'Erro no cadastro'); });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Cadastro realizado com sucesso:', data);
+                    alert('Cadastro realizado com sucesso! Faça login para continuar.');
+                    showScreen('login-screen');
+                })
+                .catch(error => {
+                    console.error('Erro no cadastro:', error);
+                    alert('Erro ao cadastrar: ' + (error.message || 'Tente novamente mais tarde.'));
+                })
+                .finally(() => {
+                    // Resetar o botão
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                });
             });
             
             // Função para mostrar uma tela específica e esconder as outras
@@ -468,24 +519,46 @@
                         submitBtn.disabled = true;
                         submitBtn.innerHTML = 'Entrando...';
                         
-                        // Simular atraso de rede
-                        setTimeout(() => {
-                            // Aqui você faria a chamada real para a API
-                            // Por enquanto, vamos simular um login bem-sucedido
-                            console.log('Login bem-sucedido!');
+                        // Fazer a requisição para a API
+                        fetch('https://feedback-hub-backend.onrender.com/api/auth/login', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                email: email,
+                                password: password
+                            })
+                        })
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Credenciais inválidas');
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log('Login bem-sucedido:', data);
                             
-                            // Mostrar o app
-                            showScreen('app');
-                            setActiveMenuItem('dashboard-link');
-                            showContent('dashboard-content');
-                            initializeCharts();
-                            
-                            // Resetar o formulário
-                            loginForm.reset();
+                            // Salvar o token JWT no localStorage
+                            if (data.token) {
+                                localStorage.setItem('authToken', data.token);
+                                
+                                // Mostrar o app
+                                showScreen('app');
+                                setActiveMenuItem('dashboard-link');
+                                showContent('dashboard-content');
+                                initializeCharts();
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro no login:', error);
+                            alert('Erro ao fazer login. Verifique suas credenciais e tente novamente.');
+                        })
+                        .finally(() => {
+                            // Resetar o botão
                             submitBtn.disabled = false;
                             submitBtn.innerHTML = originalBtnText;
-                            
-                        }, 1500); // 1.5 segundos de atraso
+                        });
                     });
                 }
             }
@@ -493,11 +566,32 @@
             // Inicializar navegação
             setupNavigation();
             
-            // Simular logout
+            // Configurar logout
             document.getElementById('logout-btn')?.addEventListener('click', function() {
                 console.log('Fazendo logout...');
+                // Remover token de autenticação
+                localStorage.removeItem('authToken');
+                // Redirecionar para a tela de login
                 showScreen('login-screen');
             });
+            
+            // Verificar autenticação ao carregar a página
+            function checkAuth() {
+                const token = localStorage.getItem('authToken');
+                if (token) {
+                    // Se tiver token, mostrar o app
+                    showScreen('app');
+                    setActiveMenuItem('dashboard-link');
+                    showContent('dashboard-content');
+                    initializeCharts();
+                } else {
+                    // Se não tiver token, mostrar a tela de login
+                    showScreen('login-screen');
+                }
+            }
+            
+            // Inicializar verificação de autenticação
+            checkAuth();
             
             // Forçar exibição da tela de login se nenhuma estiver visível
             setTimeout(function() {
