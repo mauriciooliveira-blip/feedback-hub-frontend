@@ -139,23 +139,23 @@
                 <p class="text-sm text-gray-500 mt-1">Painel de Controle</p>
             </div>
             <nav class="mt-6">
-                <a href="#" class="flex items-center px-6 py-3 text-gray-700 bg-gray-100 border-r-4 border-blue-500">
+                <a href="#" id="dashboard-link" class="flex items-center px-6 py-3 text-gray-700 bg-gray-100 border-r-4 border-blue-500">
                     <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
                     <span class="mx-3">Dashboard</span>
                 </a>
-                <a href="#" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                <a href="#" id="feedbacks-link" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
                     <i data-lucide="message-square" class="w-5 h-5"></i>
                     <span class="mx-3">Feedbacks</span>
                 </a>
-                <a href="#" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                <a href="#" id="customers-link" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
                     <i data-lucide="users" class="w-5 h-5"></i>
                     <span class="mx-3">Clientes</span>
                 </a>
-                <a href="#" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                <a href="#" id="reports-link" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
                     <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
                     <span class="mx-3">Relatórios</span>
                 </a>
-                <a href="#" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
+                <a href="#" id="settings-link" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
                     <i data-lucide="settings" class="w-5 h-5"></i>
                     <span class="mx-3">Configurações</span>
                 </a>
@@ -364,12 +364,65 @@
                 showScreen('login-screen');
             });
             
+            // Configurar navegação do menu lateral
+            function setupNavigation() {
+                // Ativar/desativar itens do menu
+                function setActiveMenuItem(activeId) {
+                    // Remover classes ativas de todos os itens
+                    document.querySelectorAll('nav a').forEach(item => {
+                        item.classList.remove('bg-gray-100', 'border-r-4', 'border-blue-500', 'text-gray-700');
+                        item.classList.add('text-gray-600');
+                    });
+                    
+                    // Adicionar classes ao item ativo
+                    const activeItem = document.getElementById(activeId);
+                    if (activeItem) {
+                        activeItem.classList.add('bg-gray-100', 'border-r-4', 'border-blue-500', 'text-gray-700');
+                        activeItem.classList.remove('text-gray-600');
+                    }
+                }
+                
+                // Navegação do menu
+                document.getElementById('dashboard-link')?.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    setActiveMenuItem('dashboard-link');
+                    // Aqui você pode adicionar lógica para carregar o dashboard
+                    console.log('Navegando para o Dashboard');
+                });
+                
+                document.getElementById('feedbacks-link')?.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    setActiveMenuItem('feedbacks-link');
+                    // Aqui você pode adicionar lógica para carregar os feedbacks
+                    console.log('Navegando para Feedbacks');
+                });
+                
+                document.getElementById('customers-link')?.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    setActiveMenuItem('customers-link');
+                    console.log('Navegando para Clientes');
+                });
+                
+                document.getElementById('reports-link')?.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    setActiveMenuItem('reports-link');
+                    console.log('Navegando para Relatórios');
+                });
+                
+                document.getElementById('settings-link')?.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    setActiveMenuItem('settings-link');
+                    console.log('Navegando para Configurações');
+                });
+            }
+            
+            // Inicializar navegação
+            setupNavigation();
+            
             // Simular logout
             document.getElementById('logout-btn')?.addEventListener('click', function() {
                 console.log('Fazendo logout...');
-                document.getElementById('app').classList.add('hidden');
-                document.getElementById('login-screen').classList.remove('hidden');
-                document.getElementById('login-screen').classList.add('flex');
+                showScreen('login-screen');
             });
             
             // Forçar exibição da tela de login se nenhuma estiver visível
