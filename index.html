@@ -6,7 +6,6 @@
     <title>Feedback Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- SCRIPT CORRIGIDO E ADICIONADO ABAIXO -->
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -47,7 +46,8 @@
 
     <script>
     document.addEventListener('DOMContentLoaded', () => {
-        const API_URL = 'https://feedback-hub-backend.onrender.com/api'; // URL do seu backend no Render
+        // A URL agora aponta para o seu serviço no Render
+        const API_URL = 'https://feedback-hub-backend.onrender.com/api'; 
         let state = { currentUser: null, currentView: 'dashboard', feedbackChart: null, allUsers: [] };
         
         const screens = { login: document.getElementById('login-screen'), signup: document.getElementById('signup-screen'), app: document.getElementById('app-screen') };
