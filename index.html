@@ -2,749 +2,137 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Feedback Hub</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- SCRIPT CORRIGIDO E ADICIONADO ABAIXO -->
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; }
-        .app-screen { display: none; }
-        .content-screen { display: block; }
-        .content-screen.hidden { display: none; }
+        .app-screen, .app-view { display: none; }
         .active { display: block; }
         .active-flex { display: flex; }
-        .content-screen.dashboard { display: none; }
-        .content-screen.feedbacks { display: none; }
-        .content-screen.customers { display: none; }
-        .content-screen.reports { display: none; }
-        .content-screen.settings { display: none; }
+        .modal-overlay { display: none; }
+        .modal-overlay.active { display: flex; }
+        .chart-container { position: relative; height: 40vh; width: 100%; }
     </style>
 </head>
-<body class="bg-gray-50">
-    <!-- Login Screen -->
-    <div id="login-screen" class="app-screen min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-4">
-        <div class="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden">
-            <div class="p-8">
-                <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold text-gray-800">Feedback Hub</h1>
-                    <p class="text-gray-600 mt-2">Acesse sua conta</p>
-                </div>
-                <form id="login-form" class="space-y-6">
-                    <div>
-                        <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
-                        <input type="email" id="email" required 
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label for="password" class="block text-sm font-medium text-gray-700">Senha</label>
-                        <input type="password" id="password" required 
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <button type="submit" 
-                                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Entrar
-                        </button>
-                    </div>
-                </form>
-                <div class="mt-4 text-center">
-                    <button id="show-register" class="text-sm text-blue-600 hover:text-blue-800">
-                        Criar nova conta
-                    </button>
-                </div>
-            </div>
-        </div>
+<body class="bg-gray-100">
+
+    <!-- Telas de Login e Signup -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4 active">
+        <div class="w-full max-w-md bg-white shadow-lg rounded-xl p-8"><h2 class="text-3xl font-bold text-center text-indigo-600 mb-2">Feedback Hub</h2><p class="text-center text-gray-500 mb-8">Bem-vindo(a) de volta!</p><form id="login-form"><div class="mb-4"><label for="login-email" class="block text-sm font-medium mb-2">Email</label><input type="email" id="login-email" class="w-full px-4 py-2 bg-gray-100 border rounded-lg" required></div><div class="mb-6"><label for="login-password" class="block text-sm font-medium mb-2">Senha</label><input type="password" id="login-password" class="w-full px-4 py-2 bg-gray-100 border rounded-lg" required></div><button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg">Entrar</button></form><p id="login-error" class="text-red-500 text-sm mt-4 text-center"></p><p class="text-center text-sm text-gray-500 mt-6">Não tem uma conta? <a href="#" id="go-to-signup" class="font-medium text-indigo-600">Cadastre-se</a></p></div>
+    </div>
+    <div id="signup-screen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="w-full max-w-md bg-white shadow-lg rounded-xl p-8"><h2 class="text-3xl font-bold text-center text-indigo-600 mb-2">Crie sua Conta</h2><p class="text-center text-gray-500 mb-8">Comece a dar e receber feedbacks.</p><form id="signup-form"><div class="grid grid-cols-1 gap-4"><input type="text" name="name" placeholder="Nome Completo" class="w-full px-4 py-2 bg-gray-100 border rounded-lg" required><input type="email" name="email" placeholder="Email Corporativo" class="w-full px-4 py-2 bg-gray-100 border rounded-lg" required><input type="password" name="password" placeholder="Senha" class="w-full px-4 py-2 bg-gray-100 border rounded-lg" pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$" title="Mínimo 8 caracteres, com maiúscula, minúscula, número e caractere especial." required><input type="password" name="confirmPassword" placeholder="Confirmar Senha" class="w-full px-4 py-2 bg-gray-100 border rounded-lg" required><select name="department" class="w-full px-4 py-2 bg-gray-100 border rounded-lg" required><option value="">Selecione o Setor</option><option value="Tecnologia">Tecnologia</option><option value="RH">Recursos Humanos</option><option value="Marketing">Marketing</option><option value="Vendas">Vendas</option></select><select name="role" class="w-full px-4 py-2 bg-gray-100 border rounded-lg" required><option value="">Selecione o Cargo</option><option value="usuario">Usuário</option><option value="gestor">Gestor</option><option value="admin">Administrador</option></select></div><button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 mt-6 rounded-lg">Cadastrar</button></form><p id="signup-error" class="text-red-500 text-sm mt-4 text-center"></p><p class="text-center text-sm text-gray-500 mt-6">Já tem uma conta? <a href="#" id="go-to-login" class="font-medium text-indigo-600">Faça Login</a></p></div>
     </div>
 
-    <!-- Register Screen -->
-    <div id="register-screen" class="app-screen hidden min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-500 to-purple-600 p-4">
-        <div class="w-full max-w-md bg-white rounded-xl shadow-2xl overflow-hidden">
-            <div class="p-8">
-                <div class="text-center mb-8">
-                    <h1 class="text-3xl font-bold text-gray-800">Criar Conta</h1>
-                    <p class="text-gray-600 mt-2">Preencha seus dados</p>
-                </div>
-                <form id="register-form" class="space-y-6">
-                    <div>
-                        <label for="reg-name" class="block text-sm font-medium text-gray-700">Nome Completo</label>
-                        <input type="text" id="reg-name" required 
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label for="reg-email" class="block text-sm font-medium text-gray-700">E-mail</label>
-                        <input type="email" id="reg-email" required 
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label for="reg-password" class="block text-sm font-medium text-gray-700">Senha</label>
-                        <input type="password" id="reg-password" required 
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label for="reg-confirm-password" class="block text-sm font-medium text-gray-700">Confirmar Senha</label>
-                        <input type="password" id="reg-confirm-password" required 
-                               class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                    </div>
-                    <div>
-                        <label for="reg-sector" class="block text-sm font-medium text-gray-700">Setor</label>
-                        <select id="reg-sector" required 
-                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Selecione um setor</option>
-                            <option value="ti">TI</option>
-                            <option value="rh">Recursos Humanos</option>
-                            <option value="financeiro">Financeiro</option>
-                            <option value="vendas">Vendas</option>
-                            <option value="marketing">Marketing</option>
-                        </select>
-                    </div>
-                    <div>
-                        <label for="reg-role" class="block text-sm font-medium text-gray-700">Cargo</label>
-                        <select id="reg-role" required 
-                                class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                            <option value="">Selecione um cargo</option>
-                            <option value="analista">Analista</option>
-                            <option value="coordenador">Coordenador</option>
-                            <option value="gerente">Gerente</option>
-                            <option value="diretor">Diretor</option>
-                        </select>
-                    </div>
-                    <div class="flex items-center">
-                        <input id="terms" type="checkbox" required 
-                               class="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded">
-                        <label for="terms" class="ml-2 block text-sm text-gray-700">
-                            Concordo com os <a href="#" class="text-blue-600 hover:text-blue-800">Termos de Uso</a>
-                        </label>
-                    </div>
-                    <div class="space-y-3">
-                        <button type="submit" 
-                                class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Criar Conta
-                        </button>
-                        <button type="button" id="back-to-login" 
-                                class="w-full flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                            Voltar para Login
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+    <!-- ===== Main App Screen ===== -->
+    <div id="app-screen" class="min-h-screen lg:flex">
+        <aside class="w-full lg:w-64 bg-white p-6 lg:h-screen lg:sticky lg:top-0 flex flex-col"><h1 class="text-2xl font-bold text-indigo-600 mb-8">Feedback Hub</h1><nav id="main-nav" class="space-y-2"></nav><div class="mt-auto pt-8"><button id="logout-button" class="w-full flex items-center justify-center gap-2 text-red-500 font-medium py-2 px-4 rounded-lg hover:bg-red-100"><i data-lucide="log-out" class="w-5 h-5"></i>Sair</button></div></aside>
+        <main class="flex-1 p-4 sm:p-6 lg:p-8 overflow-y-auto">
+            <div id="dashboard-view" class="app-view"><h2 class="text-3xl font-bold mb-6">Dashboard</h2><div class="chart-container"><canvas id="feedbackChart"></canvas></div></div>
+            <div id="team-view" class="app-view"><h2 class="text-3xl font-bold mb-6">Minha Equipe</h2><div id="team-list" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6"></div></div>
+            <div id="send-feedback-view" class="app-view"><h2 class="text-3xl font-bold mb-6">Enviar Feedback</h2><div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8"><form id="feedback-form"><div class="mb-4"><label class="block text-sm font-medium mb-2">Classificação</label><div class="flex gap-4"><label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer"><input type="radio" name="classification" value="ruim" class="form-radio text-red-500"> Ruim</label><label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer"><input type="radio" name="classification" value="media" class="form-radio text-yellow-500"> Média</label><label class="flex items-center gap-2 p-3 border rounded-lg cursor-pointer"><input type="radio" name="classification" value="boa" class="form-radio text-green-500" checked> Boa</label></div></div><div class="mb-4"><label for="feedback-recipient" class="block text-sm font-medium mb-2">Para quem?</label><select id="feedback-recipient" class="w-full px-4 py-2 bg-gray-100 border rounded-lg" required></select></div><div class="mb-4"><label for="feedback-title" class="block text-sm font-medium mb-2">Título</label><input type="text" id="feedback-title" class="w-full px-4 py-2 bg-gray-100 border rounded-lg" required></div><div class="mb-6"><label for="feedback-description" class="block text-sm font-medium mb-2">Descrição</label><textarea id="feedback-description" rows="5" class="w-full px-4 py-2 bg-gray-100 border rounded-lg" required></textarea></div><div class="mb-6 flex items-center"><input type="checkbox" id="feedback-anonymous" class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"><label for="feedback-anonymous" class="ml-2 block text-sm text-gray-900">Enviar como anônimo</label></div><button type="submit" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg">Enviar Feedback</button></form><p id="feedback-success" class="text-green-500 text-sm mt-4 text-center"></p></div></div>
+            <div id="reports-view" class="app-view"><div class="flex items-center justify-between mb-6"><h2 class="text-3xl font-bold">Relatórios</h2></div><div class="overflow-x-auto bg-white rounded-lg shadow-md"><table class="w-full text-left"><thead class="border-b"><tr><th class="p-4">Data</th><th class="p-4">De</th><th class="p-4">Para</th><th class="p-4">Título</th><th class="p-4">Classificação</th></tr></thead><tbody id="reports-table-body"></tbody></table></div></div>
+            <div id="profile-view" class="app-view"><h2 class="text-3xl font-bold mb-6">Meu Perfil</h2><div class="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-8"><div class="flex items-center space-x-6 mb-8"><img id="profile-pic" src="https://placehold.co/128x128" alt="Foto do Perfil" class="w-24 h-24 rounded-full object-cover"><div class="flex-1"><h3 id="profile-name-display" class="text-2xl font-bold"></h3><p id="profile-role-display" class="text-gray-500 capitalize"></p><p id="profile-department-display" class="text-gray-500"></p></div></div><form id="profile-photo-form" class="mb-8 p-4 border rounded-lg"><label for="profile-photo-upload" class="block text-sm font-medium mb-2">Alterar Foto de Perfil</label><div class="flex items-center gap-4"><input type="file" id="profile-photo-upload" accept="image/*" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100"><button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-4 rounded-lg">Enviar</button></div></form><form id="profile-details-form" class="p-4 border rounded-lg"><label for="profile-name" class="block text-sm font-medium">Nome</label><input type="text" id="profile-name" class="mt-1 mb-4 w-full px-4 py-2 bg-gray-100 border rounded-lg"><button type="submit" class="bg-indigo-600 text-white font-bold py-2 px-5 rounded-lg">Salvar Nome</button></form></div></div>
+            <div id="admin-users-view" class="app-view"><h2 class="text-3xl font-bold mb-6">Gerenciar Usuários</h2><div class="overflow-x-auto bg-white rounded-lg shadow-md"><table class="w-full text-left"><thead class="border-b"><tr><th class="p-4">Nome</th><th class="p-4">Email</th><th class="p-4">Cargo</th><th class="p-4">Status</th><th class="p-4">Ações</th></tr></thead><tbody id="admin-users-table-body"></tbody></table></div></div>
+        </main>
     </div>
 
-    <!-- Main App -->
-    <div id="app" class="app-screen hidden">
-        <!-- Telas de Conteúdo -->
-        <div id="dashboard-content" class="content-screen">
-        <!-- Sidebar -->
-        <div class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg">
-            <div class="p-6">
-                <h1 class="text-2xl font-bold text-gray-800">Feedback Hub</h1>
-                <p class="text-sm text-gray-500 mt-1">Painel de Controle</p>
-            </div>
-            <nav class="mt-6">
-                <a href="#" id="dashboard-link" class="flex items-center px-6 py-3 text-gray-700 bg-gray-100 border-r-4 border-blue-500">
-                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
-                    <span class="mx-3">Dashboard</span>
-                </a>
-                <a href="#" id="feedbacks-link" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
-                    <i data-lucide="message-square" class="w-5 h-5"></i>
-                    <span class="mx-3">Feedbacks</span>
-                </a>
-                <a href="#" id="customers-link" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
-                    <i data-lucide="users" class="w-5 h-5"></i>
-                    <span class="mx-3">Clientes</span>
-                </a>
-                <a href="#" id="reports-link" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
-                    <i data-lucide="bar-chart-2" class="w-5 h-5"></i>
-                    <span class="mx-3">Relatórios</span>
-                </a>
-                <a href="#" id="settings-link" class="flex items-center px-6 py-3 text-gray-600 hover:bg-gray-50">
-                    <i data-lucide="settings" class="w-5 h-5"></i>
-                    <span class="mx-3">Configurações</span>
-                </a>
-            </nav>
-            <div class="absolute bottom-0 w-full p-4 border-t">
-                <button id="logout-btn" class="flex items-center w-full text-left text-gray-600 hover:text-gray-800">
-                    <i data-lucide="log-out" class="w-5 h-5"></i>
-                    <span class="ml-3">Sair</span>
-                </button>
-            </div>
-        </div>
-
-        <!-- Main Content -->
-        <div class="ml-64 p-8">
-            <!-- Top Bar -->
-            <div class="flex justify-between items-center mb-8">
-                <h2 class="text-2xl font-bold text-gray-800">Dashboard</h2>
-                <div class="flex items-center space-x-4">
-                    <div class="relative">
-                        <i data-lucide="bell" class="w-6 h-6 text-gray-500"></i>
-                        <span class="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500"></span>
-                    </div>
-                    <div class="flex items-center space-x-2">
-                        <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white font-medium">
-                            U
-                        </div>
-                        <span class="text-sm font-medium text-gray-700">Usuário</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Stats Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Total de Feedbacks</p>
-                            <p class="text-2xl font-bold text-gray-800">1,234</p>
-                        </div>
-                        <div class="p-3 rounded-full bg-blue-100 text-blue-600">
-                            <i data-lucide="message-square" class="w-6 h-6"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <span class="text-sm text-green-500 font-medium">+12%</span>
-                        <span class="text-sm text-gray-500 ml-1">desde o mês passado</span>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Taxa de Resposta</p>
-                            <p class="text-2xl font-bold text-gray-800">89%</p>
-                        </div>
-                        <div class="p-3 rounded-full bg-green-100 text-green-600">
-                            <i data-lucide="check-circle" class="w-6 h-6"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <span class="text-sm text-green-500 font-medium">+5%</span>
-                        <span class="text-sm text-gray-500 ml-1">desde o mês passado</span>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Satisfação</p>
-                            <p class="text-2xl font-bold text-gray-800">4.8</p>
-                        </div>
-                        <div class="p-3 rounded-full bg-yellow-100 text-yellow-600">
-                            <i data-lucide="star" class="w-6 h-6"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <span class="text-sm text-green-500 font-medium">+0.2</span>
-                        <span class="text-sm text-gray-500 ml-1">desde o mês passado</span>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm font-medium text-gray-500">Clientes Ativos</p>
-                            <p class="text-2xl font-bold text-gray-800">248</p>
-                        </div>
-                        <div class="p-3 rounded-full bg-purple-100 text-purple-600">
-                            <i data-lucide="users" class="w-6 h-6"></i>
-                        </div>
-                    </div>
-                    <div class="mt-4">
-                        <span class="text-sm text-green-500 font-medium">+24</span>
-                        <span class="text-sm text-gray-500 ml-1">novos este mês</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Charts -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h3 class="text-lg font-medium text-gray-800 mb-4">Feedbacks por Mês</h3>
-                    <div class="h-64">
-                        <canvas id="feedbackChart"></canvas>
-                    </div>
-                </div>
-                <div class="bg-white p-6 rounded-xl shadow">
-                    <h3 class="text-lg font-medium text-gray-800 mb-4">Satisfação por Categoria</h3>
-                    <div class="h-64">
-                        <canvas id="satisfactionChart"></canvas>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Recent Activity -->
-            <div class="bg-white rounded-xl shadow overflow-hidden">
-                <div class="px-6 py-4 border-b">
-                    <h3 class="text-lg font-medium text-gray-800">Atividade Recente</h3>
-                </div>
-                <div class="divide-y">
-                    <div class="p-4 hover:bg-gray-50 flex items-center">
-                        <div class="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mr-4">
-                            <i data-lucide="message-square" class="w-5 h-5"></i>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">Novo feedback recebido</p>
-                            <p class="text-sm text-gray-500">Cliente: Empresa ABC</p>
-                        </div>
-                        <span class="text-xs text-gray-500">Há 5 minutos</span>
-                    </div>
-                    <div class="p-4 hover:bg-gray-50 flex items-center">
-                        <div class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-green-600 mr-4">
-                            <i data-lucide="check-circle" class="w-5 h-5"></i>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">Feedback respondido</p>
-                            <p class="text-sm text-gray-500">Cliente: XYZ Corp</p>
-                        </div>
-                        <span class="text-xs text-gray-500">Há 1 hora</span>
-                    </div>
-                    <div class="p-4 hover:bg-gray-50 flex items-center">
-                        <div class="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center text-yellow-600 mr-4">
-                            <i data-lucide="star" class="w-5 h-5"></i>
-                        </div>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-gray-900">Avaliação recebida</p>
-                            <p class="text-sm text-gray-500">5 estrelas - Excelente atendimento!</p>
-                        </div>
-                        <span class="text-xs text-gray-500">Há 3 horas</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <!-- Modals -->
+    <div id="edit-user-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">Editar Usuário</h3><form id="edit-user-form"><input type="hidden" id="edit-user-id"><div class="mb-4"><label for="edit-user-name">Nome</label><input type="text" id="edit-user-name" class="w-full mt-1 p-2 border rounded"></div><div class="mb-4"><label for="edit-user-email">Email</label><input type="email" id="edit-user-email" class="w-full mt-1 p-2 border rounded"></div><div class="mb-4"><label for="edit-user-department">Setor</label><select id="edit-user-department" class="w-full mt-1 p-2 border rounded"><option value="Tecnologia">Tecnologia</option><option value="RH">Recursos Humanos</option><option value="Marketing">Marketing</option><option value="Vendas">Vendas</option></select></div><div class="mb-4"><label for="edit-user-role">Cargo</label><select id="edit-user-role" class="w-full mt-1 p-2 border rounded"><option value="usuario">Usuário</option><option value="gestor">Gestor</option><option value="admin">Administrador</option></select></div><div class="mb-4 flex items-center"><input type="checkbox" id="edit-user-active" class="h-4 w-4 rounded"><label for="edit-user-active" class="ml-2">Ativo</label></div><div class="flex justify-end gap-4"><button type="button" id="cancel-edit-user" class="py-2 px-4 rounded">Cancelar</button><button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded">Salvar</button></div></form><hr class="my-6"><h4 class="font-bold mb-2">Redefinir Senha</h4><form id="reset-password-form"><div class="flex gap-2"><input type="password" id="reset-password-input" placeholder="Nova senha (mín. 8 caracteres)" class="flex-grow p-2 border rounded"><button type="submit" class="bg-yellow-500 text-white py-2 px-4 rounded">Redefinir</button></div></form></div></div>
 
     <script>
-        // Inicializar ícones
-        lucide.createIcons();
+    document.addEventListener('DOMContentLoaded', () => {
+        const API_URL = 'https://feedback-hub-backend.onrender.com/api'; // URL do seu backend no Render
+        let state = { currentUser: null, currentView: 'dashboard', feedbackChart: null, allUsers: [] };
+        
+        const screens = { login: document.getElementById('login-screen'), signup: document.getElementById('signup-screen'), app: document.getElementById('app-screen') };
+        const views = { dashboard: document.getElementById('dashboard-view'), team: document.getElementById('team-view'), sendFeedback: document.getElementById('send-feedback-view'), reports: document.getElementById('reports-view'), profile: document.getElementById('profile-view'), adminUsers: document.getElementById('admin-users-view') };
+        const editUserModal = document.getElementById('edit-user-modal');
 
-        // Mostrar tela de login por padrão
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('DOM carregado, configurando telas...');
+        const apiRequest = async (endpoint, method = 'GET', body = null) => {
+            const headers = {};
+            const token = localStorage.getItem('feedbackHubToken');
+            if (token) headers['Authorization'] = `Bearer ${token}`;
             
-            // Garantir que apenas uma tela esteja visível por vez
-            function showScreen(screenId) {
-                console.log('Mostrando tela:', screenId);
-                // Esconder todas as telas
-                document.querySelectorAll('.app-screen').forEach(screen => {
-                    screen.classList.add('hidden');
-                    screen.classList.remove('flex');
-                });
-                
-                // Mostrar a tela desejada
-                const targetScreen = document.getElementById(screenId);
-                if (targetScreen) {
-                    targetScreen.classList.remove('hidden');
-                    targetScreen.classList.add('flex');
-                    console.log('Tela exibida:', screenId);
-                } else {
-                    console.error('Tela não encontrada:', screenId);
-                }
+            const config = { method, headers };
+            if (body instanceof FormData) {
+                config.body = body;
+            } else if (body) {
+                headers['Content-Type'] = 'application/json';
+                config.body = JSON.stringify(body);
             }
-            
-            // Configurar navegação
-            const showRegisterBtn = document.getElementById('show-register');
-            console.log('Botão de registro encontrado:', showRegisterBtn);
-            
-            if (showRegisterBtn) {
-                showRegisterBtn.addEventListener('click', function(e) {
-                    console.log('Botão de registro clicado');
-                    e.preventDefault();
-                    showScreen('register-screen');
-                });
-            } else {
-                console.error('Botão de registro não encontrado!');
-            }
-            
-            const backToLoginBtn = document.getElementById('back-to-login');
-            if (backToLoginBtn) {
-                backToLoginBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    showScreen('login-screen');
-                });
-            }
-            
-            // Configurar login
-            const loginForm = document.getElementById('login-form');
-            if (loginForm) {
-                loginForm.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    console.log('Tentando fazer login...');
-                    
-                    const email = document.getElementById('email')?.value;
-                    const password = document.getElementById('password')?.value;
-                    
-                    if (!email || !password) {
-                        alert('Por favor, preencha todos os campos!');
-                        return;
-                    }
-                    
-                    // Mostrar loading
-                    const submitBtn = e.target.querySelector('button[type="submit"]');
-                    const originalBtnText = submitBtn.innerHTML;
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = 'Entrando...';
-                    
-                    // Tentar fazer login
-                    fetch('https://feedback-hub-backend.onrender.com/api/auth/login', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({
-                            email: email,
-                            password: password
-                        })
-                    })
-                    .then(response => {
-                        if (!response.ok) {
-                            throw new Error('Credenciais inválidas');
-                        }
-                        return response.json();
-                    })
-                    .then(data => {
-                        console.log('Login bem-sucedido:', data);
-                        
-                        // Salvar o token JWT no localStorage
-                        if (data.token) {
-                            localStorage.setItem('authToken', data.token);
-                            
-                            // Mostrar o app
-                            showScreen('app');
-                            setActiveMenuItem('dashboard-link');
-                            showContent('dashboard-content');
-                            initializeCharts();
-                            
-                            // Limpar o formulário
-                            loginForm.reset();
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Erro no login:', error);
-                        alert('Erro ao fazer login. Verifique suas credenciais e tente novamente.');
-                    })
-                    .finally(() => {
-                        // Resetar o botão
-                        if (submitBtn) {
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = originalBtnText;
-                        }
-                    });
-                });
-            }
-            
-            // Configurar cadastro
-            document.getElementById('register-form')?.addEventListener('submit', function(e) {
-                e.preventDefault();
-                console.log('Tentando cadastrar...');
-                
-                // Obter valores do formulário
-                const name = document.getElementById('reg-name')?.value;
-                const email = document.getElementById('reg-email')?.value;
-                const password = document.getElementById('reg-password')?.value;
-                const sector = document.getElementById('reg-sector')?.value;
-                const role = document.getElementById('reg-role')?.value;
-                
-                // Validação
-                if (!name || !email || !password || !sector || !role) {
-                    alert('Por favor, preencha todos os campos!');
-                    return;
-                }
-                
-                // Mostrar loading
-                const submitBtn = e.target.querySelector('button[type="submit"]');
-                const originalBtnText = submitBtn.innerHTML;
-                submitBtn.disabled = true;
-                submitBtn.innerHTML = 'Criando conta...';
-                
-                // Fazer a requisição para a API
-                fetch('https://feedback-hub-backend.onrender.com/api/auth/register', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        name: name,
-                        email: email,
-                        password: password,
-                        sector: sector,
-                        role: role
-                    })
-                })
-                .then(response => {
-                    if (!response.ok) {
-                        return response.json().then(err => { throw new Error(err.message || 'Erro no cadastro'); });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log('Cadastro realizado com sucesso:', data);
-                    alert('Cadastro realizado com sucesso! Faça login para continuar.');
-                    showScreen('login-screen');
-                })
-                .catch(error => {
-                    console.error('Erro no cadastro:', error);
-                    alert('Erro ao cadastrar: ' + (error.message || 'Tente novamente mais tarde.'));
-                })
-                .finally(() => {
-                    // Resetar o botão
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalBtnText;
-                });
-            });
-            
-            // Função para mostrar uma tela específica e esconder as outras
-            function showContent(screenId) {
-                // Esconder todas as telas de conteúdo
-                document.querySelectorAll('.content-screen').forEach(screen => {
-                    screen.classList.add('hidden');
-                });
-                
-                // Mostrar a tela desejada
-                const targetScreen = document.getElementById(screenId);
-                if (targetScreen) {
-                    targetScreen.classList.remove('hidden');
-                    console.log('Mostrando tela:', screenId);
-                }
-            }
-            
-            // Configurar navegação do menu lateral
-            function setupNavigation() {
-                // Ativar/desativar itens do menu
-                function setActiveMenuItem(activeId) {
-                    // Remover classes ativas de todos os itens
-                    document.querySelectorAll('nav a').forEach(item => {
-                        item.classList.remove('bg-gray-100', 'border-r-4', 'border-blue-500', 'text-gray-700');
-                        item.classList.add('text-gray-600');
-                    });
-                    
-                    // Adicionar classes ao item ativo
-                    const activeItem = document.getElementById(activeId);
-                    if (activeItem) {
-                        activeItem.classList.add('bg-gray-100', 'border-r-4', 'border-blue-500', 'text-gray-700');
-                        activeItem.classList.remove('text-gray-600');
-                    }
-                }
-                
-                // Navegação do menu
-                document.getElementById('dashboard-link')?.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    setActiveMenuItem('dashboard-link');
-                    showContent('dashboard-content');
-                    console.log('Navegando para o Dashboard');
-                });
-                
-                document.getElementById('feedbacks-link')?.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    setActiveMenuItem('feedbacks-link');
-                    showContent('feedbacks-content');
-                    console.log('Navegando para Feedbacks');
-                });
-                
-                document.getElementById('customers-link')?.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    setActiveMenuItem('customers-link');
-                    showContent('customers-content');
-                    console.log('Navegando para Clientes');
-                });
-                
-                document.getElementById('reports-link')?.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    setActiveMenuItem('reports-link');
-                    showContent('reports-content');
-                    console.log('Navegando para Relatórios');
-                });
-                
-                document.getElementById('settings-link')?.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    setActiveMenuItem('settings-link');
-                    showContent('settings-content');
-                    console.log('Navegando para Configurações');
-                });
-                
-                // Configurar o formulário de login
-                const loginForm = document.getElementById('login-form');
-                if (loginForm) {
-                    loginForm.addEventListener('submit', function(e) {
-                        e.preventDefault();
-                        console.log('Tentando fazer login...');
-                        
-                        // Obter valores do formulário
-                        const email = document.getElementById('email')?.value;
-                        const password = document.getElementById('password')?.value;
-                        
-                        // Validação simples
-                        if (!email || !password) {
-                            alert('Por favor, preencha todos os campos!');
-                            return;
-                        }
-                        
-                        // Simular autenticação (substituir por chamada à API real)
-                        console.log('Email:', email);
-                        console.log('Senha:', password.replace(/./g, '*'));
-                        
-                        // Mostrar loading
-                        const submitBtn = loginForm.querySelector('button[type="submit"]');
-                        const originalBtnText = submitBtn.innerHTML;
-                        submitBtn.disabled = true;
-                        submitBtn.innerHTML = 'Entrando...';
-                        
-                        // Fazer a requisição para a API
-                        fetch('https://feedback-hub-backend.onrender.com/api/auth/login', {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({
-                                email: email,
-                                password: password
-                            })
-                        })
-                        .then(response => {
-                            if (!response.ok) {
-                                throw new Error('Credenciais inválidas');
-                            }
-                            return response.json();
-                        })
-                        .then(data => {
-                            console.log('Login bem-sucedido:', data);
-                            
-                            // Salvar o token JWT no localStorage
-                            if (data.token) {
-                                localStorage.setItem('authToken', data.token);
-                                
-                                // Mostrar o app
-                                showScreen('app');
-                                setActiveMenuItem('dashboard-link');
-                                showContent('dashboard-content');
-                                initializeCharts();
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Erro no login:', error);
-                            alert('Erro ao fazer login. Verifique suas credenciais e tente novamente.');
-                        })
-                        .finally(() => {
-                            // Resetar o botão
-                            submitBtn.disabled = false;
-                            submitBtn.innerHTML = originalBtnText;
-                        });
-                    });
-                }
-            }
-            
-            // Inicializar navegação
-            setupNavigation();
-            
-            // Configurar logout
-            document.getElementById('logout-btn')?.addEventListener('click', function() {
-                console.log('Fazendo logout...');
-                // Remover token de autenticação
-                localStorage.removeItem('authToken');
-                // Redirecionar para a tela de login
-                showScreen('login-screen');
-            });
-            
-            // Verificar autenticação ao carregar a página
-            function checkAuth() {
-                const token = localStorage.getItem('authToken');
-                if (token) {
-                    // Se tiver token, mostrar o app
-                    showScreen('app');
-                    setActiveMenuItem('dashboard-link');
-                    showContent('dashboard-content');
-                    initializeCharts();
-                } else {
-                    // Se não tiver token, mostrar a tela de login
-                    showScreen('login-screen');
-                }
-            }
-            
-            // Inicializar verificação de autenticação
-            checkAuth();
-            
-            // Forçar exibição da tela de login se nenhuma estiver visível
-            setTimeout(function() {
-                const anyScreenVisible = document.querySelector('.app-screen:not(.hidden)');
-                if (!anyScreenVisible) {
-                    console.log('Nenhuma tela visível, mostrando login...');
-                    document.getElementById('login-screen').classList.remove('hidden');
-                    document.getElementById('login-screen').classList.add('flex');
-                }
-            }, 500);
-        });
 
-        // Inicializar gráficos
-        function initializeCharts() {
-            // Gráfico de feedbacks
-            const feedbackCtx = document.getElementById('feedbackChart').getContext('2d');
-            new Chart(feedbackCtx, {
-                type: 'line',
-                data: {
-                    labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul'],
-                    datasets: [{
-                        label: 'Feedbacks',
-                        data: [65, 59, 80, 81, 56, 55, 70],
-                        borderColor: 'rgb(59, 130, 246)',
-                        tension: 0.3,
-                        fill: true,
-                        backgroundColor: 'rgba(59, 130, 246, 0.1)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true
-                        }
-                    }
-                }
-            });
+            const response = await fetch(`${API_URL}${endpoint}`, config);
+            if (response.status === 401 || response.status === 403) { handleLogout(); throw new Error("Não autorizado."); }
+            const data = await response.json();
+            if (!response.ok) { throw new Error(data.message || 'Ocorreu um erro.'); }
+            return data;
+        };
 
-            // Gráfico de satisfação
-            const satisfactionCtx = document.getElementById('satisfactionChart').getContext('2d');
-            new Chart(satisfactionCtx, {
-                type: 'bar',
-                data: {
-                    labels: ['Suporte', 'Produto', 'Atendimento', 'Qualidade', 'Preço'],
-                    datasets: [{
-                        label: 'Satisfação',
-                        data: [4.5, 4.8, 4.2, 4.6, 4.0],
-                        backgroundColor: [
-                            'rgba(59, 130, 246, 0.8)',
-                            'rgba(16, 185, 129, 0.8)',
-                            'rgba(245, 158, 11, 0.8)',
-                            'rgba(139, 92, 246, 0.8)',
-                            'rgba(239, 68, 68, 0.8)'
-                        ],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: false
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 5
-                        }
-                    }
-                }
-            });
-        }
+        const showScreen = (name) => Object.entries(screens).forEach(([key, el]) => el.className = key === name ? (name === 'app' ? 'min-h-screen lg:flex active-flex' : 'min-h-screen flex items-center justify-center p-4 active') : el.className.replace(/active-flex|active/g, ''));
+        const showView = (name) => { state.currentView = name; Object.entries(views).forEach(([key, el]) => el.classList.toggle('active', key === name)); renderActiveView(); updateNavHighlight(); };
+        const updateNavHighlight = () => document.querySelectorAll('#main-nav a').forEach(a => a.classList.toggle('bg-indigo-100', a.dataset.view === state.currentView));
+        
+        const handleLogin = async e => { e.preventDefault(); try { const data = await apiRequest('/login', 'POST', { email: document.getElementById('login-email').value, password: document.getElementById('login-password').value }); localStorage.setItem('feedbackHubToken', data.token); state.currentUser = data.user; initializeApp(); } catch(err) { document.getElementById('login-error').textContent = err.message; }};
+        const handleSignup = async (e) => { e.preventDefault(); const formData = new FormData(e.target); const data = Object.fromEntries(formData.entries()); const errorEl = document.getElementById('signup-error'); errorEl.textContent = ''; if (data.password !== data.confirmPassword) { errorEl.textContent = 'As senhas não coincidem.'; return; } try { const result = await apiRequest('/register', 'POST', data); alert(result.message); showScreen('login'); e.target.reset(); } catch (error) { errorEl.textContent = error.message; }};
+        const handleLogout = () => { localStorage.removeItem('feedbackHubToken'); state.currentUser = null; showScreen('login'); };
+
+        const checkSession = async () => { if (localStorage.getItem('feedbackHubToken')) { try { state.currentUser = await apiRequest('/profile'); initializeApp(); } catch (error) { handleLogout(); } } };
+
+        const initializeApp = () => { renderNav(); showScreen('app'); showView('dashboard'); };
+
+        const renderNav = () => {
+            let navItems = `<a href="#" data-view="dashboard" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100"><i data-lucide="layout-dashboard"></i> Dashboard</a>`;
+            if (state.currentUser.role !== 'usuario') navItems += `<a href="#" data-view="team" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100"><i data-lucide="users"></i> Minha Equipe</a>`;
+            navItems += `<a href="#" data-view="sendFeedback" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100"><i data-lucide="send"></i> Enviar Feedback</a>`;
+            if (state.currentUser.role !== 'usuario') navItems += `<a href="#" data-view="reports" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100"><i data-lucide="bar-chart-3"></i> Relatórios</a>`;
+            if (state.currentUser.role === 'admin') navItems += `<a href="#" data-view="adminUsers" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100"><i data-lucide="shield"></i> Gerenciar Usuários</a>`;
+            navItems += `<a href="#" data-view="profile" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100"><i data-lucide="user-circle"></i> Perfil</a>`;
+            document.getElementById('main-nav').innerHTML = navItems;
+            lucide.createIcons();
+            document.getElementById('main-nav').querySelectorAll('a').forEach(a => a.onclick = (e) => { e.preventDefault(); showView(a.dataset.view); });
+        };
+        
+        const renderActiveView = () => { const renderMap = { dashboard: renderDashboard, team: renderTeam, sendFeedback: renderSendFeedback, reports: renderReports, profile: renderProfile, adminUsers: renderAdminUsers }; if (renderMap[state.currentView]) renderMap[state.currentView](); };
+        const renderDashboard = async () => { try { const feedbacks = await apiRequest('/feedbacks'); const counts = { boa: 0, media: 0, ruim: 0 }; feedbacks.forEach(f => counts[f.classification]++); const ctx = document.getElementById('feedbackChart').getContext('2d'); if (state.feedbackChart) state.feedbackChart.destroy(); state.feedbackChart = new Chart(ctx, { type: 'bar', data: { labels: ['Bons', 'Médios', 'Ruins'], datasets: [{ data: [counts.boa, counts.media, counts.ruim], backgroundColor: ['#22c55e', '#f59e0b', '#ef4444'] }] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }, plugins: { legend: { display: false } } } }); } catch (error) { console.error(error); }};
+        const renderTeam = async () => { try { const team = await apiRequest('/team'); document.getElementById('team-list').innerHTML = team.map(m => `<div class="bg-white rounded-lg shadow p-4 text-center"><img src="${m.photoUrl}" class="w-20 h-20 rounded-full mx-auto mb-2 object-cover"><h4 class="font-semibold">${m.name}</h4><p class="text-sm text-gray-500 capitalize">${m.role}</p></div>`).join(''); } catch(e) { console.error(e); } };
+        const renderReports = async () => { try { const feedbacks = await apiRequest('/feedbacks'); const classificationMap = { boa: 'Boa', media: 'Média', ruim: 'Ruim' }; document.getElementById('reports-table-body').innerHTML = feedbacks.map(f => `<tr class="border-b"><td class="p-4">${new Date(f.date).toLocaleDateString()}</td><td class="p-4">${f.fromUserName}</td><td class="p-4">${f.toUserName}</td><td class="p-4">${f.title}</td><td class="p-4">${classificationMap[f.classification]}</td></tr>`).join(''); } catch(e) { console.error(e); } };
+        const renderSendFeedback = async () => { try { const users = await apiRequest('/users'); document.getElementById('feedback-recipient').innerHTML = users.map(u => `<option value="${u.id}">${u.name}</option>`).join(''); document.getElementById('feedback-form').reset(); document.getElementById('feedback-success').textContent = ''; } catch(e) { console.error(e); } };
+        const renderProfile = () => { const user = state.currentUser; document.getElementById('profile-pic').src = user.photoUrl || 'https://placehold.co/128x128'; document.getElementById('profile-name-display').textContent = user.name; document.getElementById('profile-role-display').textContent = user.role; document.getElementById('profile-department-display').textContent = user.department; document.getElementById('profile-name').value = user.name; };
+        
+        const renderAdminUsers = async () => {
+            try {
+                state.allUsers = await apiRequest('/admin/users');
+                document.getElementById('admin-users-table-body').innerHTML = state.allUsers.map(u => `
+                    <tr class="border-b"><td class="p-4 flex items-center gap-2"><img src="${u.photoUrl || 'https://placehold.co/40x40'}" class="w-8 h-8 rounded-full object-cover"> ${u.name}</td><td class="p-4">${u.email}</td><td class="p-4 capitalize">${u.role}</td><td class="p-4">${u.isActive ? '<span class="text-green-600 font-semibold">Ativo</span>' : '<span class="text-red-600 font-semibold">Inativo</span>'}</td><td class="p-4"><button data-userid="${u.id}" class="edit-user-btn bg-blue-500 text-white py-1 px-3 rounded">Editar</button> <button data-userid="${u.id}" class="delete-user-btn bg-red-500 text-white py-1 px-3 rounded ml-2">Excluir</button></td></tr>`).join('');
+            } catch(e) { console.error(e); }
+        };
+
+        const openEditModal = (userId) => { const user = state.allUsers.find(u => u.id === userId); if (!user) return; document.getElementById('edit-user-id').value = user.id; document.getElementById('edit-user-name').value = user.name; document.getElementById('edit-user-email').value = user.email; document.getElementById('edit-user-department').value = user.department; document.getElementById('edit-user-role').value = user.role; document.getElementById('edit-user-active').checked = user.isActive; editUserModal.classList.add('active'); };
+
+        // Event Listeners
+        document.getElementById('login-form').addEventListener('submit', handleLogin);
+        document.getElementById('signup-form').addEventListener('submit', handleSignup);
+        document.getElementById('go-to-signup').addEventListener('click', e => { e.preventDefault(); showScreen('signup'); });
+        document.getElementById('go-to-login').addEventListener('click', e => { e.preventDefault(); showScreen('login'); });
+        document.getElementById('logout-button').addEventListener('click', handleLogout);
+        
+        document.getElementById('feedback-form').addEventListener('submit', async e => { e.preventDefault(); try { await apiRequest('/feedbacks', 'POST', { toUserId: document.getElementById('feedback-recipient').value, title: document.getElementById('feedback-title').value, classification: document.querySelector('input[name="classification"]:checked').value, description: document.getElementById('feedback-description').value, anonymous: document.getElementById('feedback-anonymous').checked }); document.getElementById('feedback-success').textContent = 'Feedback enviado com sucesso!'; setTimeout(() => document.getElementById('feedback-success').textContent = '', 3000); e.target.reset(); } catch(err) { alert(err.message); } });
+        document.getElementById('profile-photo-form').addEventListener('submit', async e => { e.preventDefault(); const file = document.getElementById('profile-photo-upload').files[0]; if (!file) { alert('Por favor, selecione um arquivo.'); return; } const formData = new FormData(); formData.append('profilePic', file); try { const { user } = await apiRequest('/profile/upload-photo', 'POST', formData); state.currentUser = { ...state.currentUser, photoUrl: user.photoUrl }; renderProfile(); alert('Foto atualizada!'); } catch(err) { alert(err.message); }});
+        document.getElementById('profile-details-form').addEventListener('submit', async e => { e.preventDefault(); try { const { user } = await apiRequest('/profile', 'PUT', { name: document.getElementById('profile-name').value }); state.currentUser.name = user.name; renderProfile(); alert('Nome atualizado!'); } catch(err) { alert(err.message); }});
+        document.getElementById('admin-users-table-body').addEventListener('click', e => { if (e.target.classList.contains('edit-user-btn')) openEditModal(parseInt(e.target.dataset.userid)); if (e.target.classList.contains('delete-user-btn')) { if(confirm('Tem certeza que deseja excluir este usuário? Isso removerá TODOS os feedbacks enviados e recebidos por ele.')) { apiRequest(`/admin/users/${e.target.dataset.userid}`, 'DELETE').then(renderAdminUsers); } } });
+        document.getElementById('cancel-edit-user').addEventListener('click', () => editUserModal.classList.remove('active'));
+        document.getElementById('edit-user-form').addEventListener('submit', async e => { e.preventDefault(); const id = document.getElementById('edit-user-id').value; const data = { name: document.getElementById('edit-user-name').value, email: document.getElementById('edit-user-email').value, department: document.getElementById('edit-user-department').value, role: document.getElementById('edit-user-role').value, isActive: document.getElementById('edit-user-active').checked }; try { await apiRequest(`/admin/users/${id}`, 'PUT', data); editUserModal.classList.remove('active'); renderAdminUsers(); } catch(err) { alert(err.message); } });
+        document.getElementById('reset-password-form').addEventListener('submit', async e => { e.preventDefault(); const id = document.getElementById('edit-user-id').value; const newPassword = document.getElementById('reset-password-input').value; try { const res = await apiRequest(`/admin/users/${id}/reset-password`, 'POST', { newPassword }); alert(res.message); document.getElementById('reset-password-input').value = ''; } catch(err) { alert(err.message); } });
+
+        checkSession();
+    });
     </script>
 </body>
 </html>
+
