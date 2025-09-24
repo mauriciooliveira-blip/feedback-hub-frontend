@@ -45,46 +45,570 @@
     <div id="edit-user-modal" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 items-center justify-center p-4"><div class="bg-white rounded-lg shadow-xl w-full max-w-md p-6"><h3 class="text-xl font-bold mb-4">Editar Usuário</h3><form id="edit-user-form"><input type="hidden" id="edit-user-id"><div class="mb-4"><label for="edit-user-name">Nome</label><input type="text" id="edit-user-name" class="w-full mt-1 p-2 border rounded"></div><div class="mb-4"><label for="edit-user-email">Email</label><input type="email" id="edit-user-email" class="w-full mt-1 p-2 border rounded"></div><div class="mb-4"><label for="edit-user-department">Setor</label><select id="edit-user-department" class="w-full mt-1 p-2 border rounded"><option value="Tecnologia">Tecnologia</option><option value="RH">Recursos Humanos</option><option value="Marketing">Marketing</option><option value="Vendas">Vendas</option></select></div><div class="mb-4"><label for="edit-user-role">Cargo</label><select id="edit-user-role" class="w-full mt-1 p-2 border rounded"><option value="usuario">Usuário</option><option value="gestor">Gestor</option><option value="admin">Administrador</option></select></div><div class="mb-4 flex items-center"><input type="checkbox" id="edit-user-active" class="h-4 w-4 rounded"><label for="edit-user-active" class="ml-2">Ativo</label></div><div class="flex justify-end gap-4"><button type="button" id="cancel-edit-user" class="py-2 px-4 rounded">Cancelar</button><button type="submit" class="bg-indigo-600 text-white py-2 px-4 rounded">Salvar</button></div></form><hr class="my-6"><h4 class="font-bold mb-2">Redefinir Senha</h4><form id="reset-password-form"><div class="flex gap-2"><input type="password" id="reset-password-input" placeholder="Nova senha (mín. 8 caracteres)" class="flex-grow p-2 border rounded"><button type="submit" class="bg-yellow-500 text-white py-2 px-4 rounded">Redefinir</button></div></form></div></div>
 
     <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        // A URL agora aponta para o seu serviço no Render
-        const API_URL = 'https://feedback-hub-backend.onrender.com/api'; 
-        let state = { currentUser: null, currentView: 'dashboard', feedbackChart: null, allUsers: [] };
+    // Estado global da aplicação
+    const state = {
+        currentUser: null,
+        currentView: 'dashboard',
+        feedbackChart: null,
+        allUsers: [],
+        API_URL: 'https://feedback-hub-backend.onrender.com/api',
+        screens: {},
+        views: {},
+        editUserModal: null,
         
-        const screens = { login: document.getElementById('login-screen'), signup: document.getElementById('signup-screen'), app: document.getElementById('app-screen') };
-        const views = { dashboard: document.getElementById('dashboard-view'), team: document.getElementById('team-view'), sendFeedback: document.getElementById('send-feedback-view'), reports: document.getElementById('reports-view'), profile: document.getElementById('profile-view'), adminUsers: document.getElementById('admin-users-view') };
-        const editUserModal = document.getElementById('edit-user-modal');
+        // Inicializa o estado
+        init: function() {
+            // Inicializa referências aos elementos
+            this.screens = { 
+                login: document.getElementById('login-screen'), 
+                signup: document.getElementById('signup-screen'), 
+                app: document.getElementById('app-screen') 
+            };
+            
+            this.views = { 
+                dashboard: document.getElementById('dashboard-view'), 
+                team: document.getElementById('team-view'), 
+                sendFeedback: document.getElementById('send-feedback-view'), 
+                reports: document.getElementById('reports-view'), 
+                profile: document.getElementById('profile-view'), 
+                adminUsers: document.getElementById('admin-users-view') 
+            };
+            
+            this.editUserModal = document.getElementById('edit-user-modal');
+            
+            // Inicializa os eventos
+            this.initEvents();
+            
+            // Verifica a sessão do usuário
+            this.checkSession();
+        },
+        
+        // Inicializa os eventos
+        initEvents: function() {
+            // Eventos de navegação
+            document.getElementById('go-to-signup')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showScreen('signup');
+            });
+            
+            document.getElementById('go-to-login')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.showScreen('login');
+            });
+            
+            // Eventos de formulário
+            document.getElementById('login-form')?.addEventListener('submit', (e) => this.handleLogin(e));
+            document.getElementById('signup-form')?.addEventListener('submit', (e) => this.handleSignup(e));
+            document.getElementById('logout-button')?.addEventListener('click', () => this.handleLogout());
+            
+            // Outros eventos
+            document.getElementById('cancel-edit-user')?.addEventListener('click', () => {
+                this.editUserModal?.classList.remove('active');
+            });
+        },
+        
+        // Mostra uma tela específica
+        showScreen: function(screenName) {
+            console.log('Mostrando tela:', screenName);
+            
+            // Esconde todas as telas
+            Object.values(this.screens).forEach(screen => {
+                if (screen) screen.classList.remove('active');
+            });
+            
+            // Mostra a tela solicitada
+            const screen = this.screens[screenName] || document.getElementById(`${screenName}-screen`);
+            if (screen) {
+                screen.classList.add('active');
+                console.log('Tela ativada:', screen.id);
+                
+                // Se for a tela do app, garante que a view correta seja mostrada
+                if (screenName === 'app') {
+                    console.log('Inicializando app...');
+                    this.initializeApp();
+                }
+            } else {
+                console.error('Tela não encontrada:', screenName);
+                // Se não encontrar a tela, mostra a tela de login por padrão
+                if (this.screens.login) {
+                    this.screens.login.classList.add('active');
+                }
+            }
+        },
+        
+        // Mostra uma view específica dentro do app
+        showView: function(viewName) {
+            console.log('Mostrando view:', viewName);
+            
+            // Atualiza a view ativa
+            this.currentView = viewName;
+            
+            // Esconde todas as views
+            Object.values(this.views).forEach(view => {
+                if (view) view.style.display = 'none';
+            });
+            
+            // Mostra a view solicitada
+            const view = this.views[viewName] || document.getElementById(`${viewName}-view`);
+            if (view) {
+                view.style.display = 'block';
+                console.log('View ativada:', view.id);
+            } else {
+                console.error('View não encontrada:', viewName);
+                // Se não encontrar a view, mostra o dashboard por padrão
+                if (this.views.dashboard) {
+                    this.views.dashboard.style.display = 'block';
+                    this.currentView = 'dashboard';
+                }
+            }
+            
+            // Atualiza destaque do menu
+            this.updateNavHighlight();
+        },
+        
+        // Atualiza o destaque do menu de navegação
+        updateNavHighlight: function() {
+            const navItems = document.querySelectorAll('#main-nav a');
+            navItems.forEach(item => {
+                item.classList.remove('bg-gray-100', 'text-indigo-600');
+                if (item.dataset.view === this.currentView) {
+                    item.classList.add('bg-gray-100', 'text-indigo-600');
+                }
+            });
+        },
+        
+        // Verifica se o usuário está autenticado
+        checkSession: function() {
+            console.log('Verificando sessão...');
+            const token = localStorage.getItem('feedbackHubToken');
+            
+            if (token) {
+                // Simula uma verificação de token
+                // Em produção, você faria uma chamada para a API
+                console.log('Token encontrado, verificando...');
+                
+                // Simulação de usuário logado para testes
+                this.currentUser = {
+                    id: 1,
+                    name: 'Usuário Teste',
+                    email: 'teste@exemplo.com',
+                    role: 'usuario'
+                };
+                
+                this.initializeApp();
+            } else {
+                console.log('Nenhum token encontrado, redirecionando para login...');
+                this.showScreen('login');
+            }
+        },
+        
+        // Inicializa o aplicativo
+        initializeApp: function() {
+            console.log('Inicializando aplicativo...');
+            
+            // Mostra a tela do aplicativo
+            this.showScreen('app');
+            
+            // Mostra a view inicial (dashboard)
+            this.showView('dashboard');
+            
+            // Renderiza o menu de navegação
+            this.renderNav();
+            
+            // Atualiza o nome do usuário na interface
+            const userNameElement = document.getElementById('user-name');
+            if (userNameElement && this.currentUser) {
+                userNameElement.textContent = this.currentUser.name;
+            }
+        },
+        
+        // Renderiza o menu de navegação
+        renderNav: function() {
+            const navElement = document.getElementById('main-nav');
+            if (!navElement) return;
+            
+            let navItems = '';
+            
+            // Itens do menu baseados nas permissões do usuário
+            navItems += `
+                <a href="#" data-view="dashboard" class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
+                    Dashboard
+                </a>
+                <a href="#" data-view="sendFeedback" class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100">
+                    <i data-lucide="message-square" class="w-5 h-5 mr-3"></i>
+                    Enviar Feedback
+                </a>
+            `;
+            
+            // Itens adicionais para administradores
+            if (this.currentUser?.role === 'admin') {
+                navItems += `
+                    <a href="#" data-view="adminUsers" class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100">
+                        <i data-lucide="users" class="w-5 h-5 mr-3"></i>
+                        Gerenciar Usuários
+                    </a>
+                `;
+            }
+            
+            // Link para o perfil
+            navItems += `
+                <a href="#" data-view="profile" class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100">
+                    <i data-lucide="user" class="w-5 h-5 mr-3"></i>
+                    Meu Perfil
+                </a>
+            `;
+            
+            navElement.innerHTML = navItems;
+            
+            // Adiciona os eventos de clique aos itens do menu
+            navElement.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const view = link.dataset.view;
+                    if (view) {
+                        this.showView(view);
+                    }
+                });
+            });
+            
+            // Atualiza os ícones do Lucide
+            lucide.createIcons();
+        },
+        
+        // Manipula o login do usuário
+        handleLogin: async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('login-email')?.value;
+            const password = document.getElementById('login-password')?.value;
+            const errorElement = document.getElementById('login-error');
+            
+            if (!email || !password) {
+                if (errorElement) errorElement.textContent = 'Por favor, preencha todos os campos.';
+                return;
+            }
+            
+            try {
+                // Simulação de login bem-sucedido
+                console.log('Tentando fazer login com:', email);
+                
+                // Em produção, você faria uma chamada para a API:
+                // const response = await this.apiRequest('/auth/login', 'POST', { email, password });
+                // this.currentUser = response.user;
+                // localStorage.setItem('feedbackHubToken', response.token);
+                
+                // Simulação de resposta da API
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                this.currentUser = {
+                    id: 1,
+                    name: 'Usuário Teste',
+                    email: email,
+                    role: 'usuario'
+                };
+                
+                // Salva o token de autenticação (simulado)
+                localStorage.setItem('feedbackHubToken', 'simulated-token');
+                
+                // Inicializa o aplicativo
+                this.initializeApp();
+                
+            } catch (error) {
+                console.error('Erro no login:', error);
+                if (errorElement) {
+                    errorElement.textContent = error.message || 'Erro ao fazer login. Tente novamente.';
+                }
+            }
+        },
+        
+        // Manipula o cadastro de novo usuário
+        handleSignup: async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+            const errorElement = document.getElementById('signup-error');
+            
+            if (!data.name || !data.email || !data.password || !data.confirmPassword) {
+                if (errorElement) errorElement.textContent = 'Por favor, preencha todos os campos.';
+                return;
+            }
+            
+            if (data.password !== data.confirmPassword) {
+                if (errorElement) errorElement.textContent = 'As senhas não coincidem.';
+                return;
+            }
+            
+            try {
+                console.log('Tentando cadastrar usuário:', data.email);
+                
+                // Em produção, você faria uma chamada para a API:
+                // const response = await this.apiRequest('/auth/register', 'POST', data);
+                
+                // Simulação de resposta da API
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Limpa o formulário
+                e.target.reset();
+                
+                // Mostra mensagem de sucesso e redireciona para o login
+                alert('Cadastro realizado com sucesso! Faça login para continuar.');
+                this.showScreen('login');
+                
+            } catch (error) {
+                console.error('Erro no cadastro:', error);
+                if (errorElement) {
+                    errorElement.textContent = error.message || 'Erro ao cadastrar. Tente novamente.';
+                }
+            }
+        },
+        
+        // Manipula o logout do usuário
+        handleLogout: function() {
+            console.log('Efetuando logout...');
+            
+            // Remove o token de autenticação
+            localStorage.removeItem('feedbackHubToken');
+            
+            // Limpa o estado do usuário
+            this.currentUser = null;
+            
+            // Redireciona para a tela de login
+            this.showScreen('login');
+        }
+    };
+    
+    // Inicializa a aplicação quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', () => {
+        // Inicializa o estado da aplicação
+        state.init();
+        
+        // Inicializa os ícones do Lucide
+        lucide.createIcons();
+    });
 
+        // Função auxiliar para fazer requisições à API
         const apiRequest = async (endpoint, method = 'GET', body = null) => {
-            const headers = {};
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            
             const token = localStorage.getItem('feedbackHubToken');
             if (token) headers['Authorization'] = `Bearer ${token}`;
             
-            const config = { method, headers };
-            if (body instanceof FormData) {
-                config.body = body;
-            } else if (body) {
-                headers['Content-Type'] = 'application/json';
-                config.body = JSON.stringify(body);
+            const config = { 
+                method, 
+                headers,
+                mode: 'cors',
+                cache: 'no-cache'
+            };
+            
+            if (body) {
+                if (body instanceof FormData) {
+                    // Para FormData, não definir Content-Type, o navegador irá definir com o boundary correto
+                    delete headers['Content-Type'];
+                    config.body = body;
+                } else {
+                    config.body = JSON.stringify(body);
+                }
             }
-
-            const response = await fetch(`${API_URL}${endpoint}`, config);
-            if (response.status === 401 || response.status === 403) { handleLogout(); throw new Error("Não autorizado."); }
-            const data = await response.json();
-            if (!response.ok) { throw new Error(data.message || 'Ocorreu um erro.'); }
-            return data;
+            
+            try {
+                console.log(`[${method}] ${state.API_URL}${endpoint}`, { body: config.body });
+                
+                const response = await fetch(`${state.API_URL}${endpoint}`, config);
+                
+                if (response.status === 401 || response.status === 403) {
+                    state.handleLogout();
+                    throw new Error("Sessão expirada. Faça login novamente.");
+                }
+                
+                const data = await response.json().catch(() => ({}));
+                
+                if (!response.ok) {
+                    throw new Error(data.message || `Erro na requisição: ${response.statusText}`);
+                }
+                
+                return data;
+                
+            } catch (error) {
+                console.error('Erro na requisição:', error);
+                throw error;
+            }
+        };
+        
+        // Função para mostrar/esconder telas
+        function showScreen(screenName) {
+            console.log('Mostrando tela:', screenName);
+            
+            // Esconde todas as telas
+            Object.values(state.screens).forEach(screen => {
+                if (screen) screen.classList.remove('active');
+            });
+            
+            // Mostra a tela solicitada
+            const screen = state.screens[screenName] || document.getElementById(`${screenName}-screen`);
+            if (screen) {
+                screen.classList.add('active');
+                console.log('Tela ativada:', screen.id);
+                
+                // Se for a tela do app, garante que a view correta seja mostrada
+                if (screenName === 'app') {
+                    console.log('Inicializando app...');
+                    state.initializeApp();
+                }
+            } else {
+                console.error('Tela não encontrada:', screenName);
+                // Se não encontrar a tela, mostra a tela de login por padrão
+                if (state.screens.login) {
+                    state.screens.login.classList.add('active');
+                }
+            }
+        }
+        
+        // Função para mostrar/esconder views dentro do app
+        function showView(viewName) {
+            console.log('Mostrando view:', viewName);
+            
+            // Atualiza a view ativa
+            state.currentView = viewName;
+            
+            // Esconde todas as views
+            Object.values(state.views).forEach(view => {
+                if (view) view.style.display = 'none';
+            });
+            
+            // Mostra a view solicitada
+            const view = state.views[viewName] || document.getElementById(`${viewName}-view`);
+            if (view) {
+                view.style.display = 'block';
+                console.log('View ativada:', view.id);
+            } else {
+                console.error('View não encontrada:', viewName);
+                // Se não encontrar a view, mostra o dashboard por padrão
+                if (state.views.dashboard) {
+                    state.views.dashboard.style.display = 'block';
+                    state.currentView = 'dashboard';
+                }
+            }
+            
+            // Atualiza destaque do menu
+            updateNavHighlight();
+        }
+        
+        // Função para atualizar destaque do menu
+        function updateNavHighlight() {
+            const navItems = document.querySelectorAll('#main-nav a');
+            navItems.forEach(item => {
+                item.classList.remove('bg-gray-100', 'text-indigo-600');
+                if (item.dataset.view === state.activeView) {
+                    item.classList.add('bg-gray-100', 'text-indigo-600');
+                }
+            });
+        }
+        
+        const handleLogin = async e => { 
+            e.preventDefault(); 
+            try { 
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                
+                // Simulação de login bem-sucedido
+                // Em produção, substitua por uma chamada real à API
+                state.currentUser = { 
+                    name: 'Usuário Teste',
+                    email: email,
+                    role: 'usuario',
+                    id: 1
+                };
+                
+                // Salva o token de autenticação (simulado)
+                localStorage.setItem('feedbackHubToken', 'simulated-token');
+                
+                // Mostra a tela do app
+                initializeApp();
+                
+            } catch(err) { 
+                const errorEl = document.getElementById('login-error');
+                if (errorEl) {
+                    errorEl.textContent = err.message || 'Erro ao fazer login. Tente novamente.';
+                }
+            }
+        };
+        
+        const handleSignup = async (e) => { 
+            e.preventDefault(); 
+            const formData = new FormData(e.target); 
+            const data = Object.fromEntries(formData.entries()); 
+            const errorEl = document.getElementById('signup-error'); 
+            errorEl.textContent = ''; 
+            
+            if (data.password !== data.confirmPassword) { 
+                errorEl.textContent = 'As senhas não coincidem.'; 
+                return; 
+            } 
+            
+            try { 
+                // Simulação de cadastro bem-sucedido
+                // Em produção, substitua por uma chamada real à API
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                alert('Cadastro realizado com sucesso! Faça login para continuar.'); 
+                showScreen('login'); 
+                e.target.reset(); 
+            } catch (error) { 
+                errorEl.textContent = error.message; 
+            }
+        };
+        
+        const handleLogout = () => { 
+            localStorage.removeItem('feedbackHubToken'); 
+            state.currentUser = null; 
+            showScreen('login'); 
         };
 
-        const showScreen = (name) => Object.entries(screens).forEach(([key, el]) => el.className = key === name ? (name === 'app' ? 'min-h-screen lg:flex active-flex' : 'min-h-screen flex items-center justify-center p-4 active') : el.className.replace(/active-flex|active/g, ''));
-        const showView = (name) => { state.currentView = name; Object.entries(views).forEach(([key, el]) => el.classList.toggle('active', key === name)); renderActiveView(); updateNavHighlight(); };
-        const updateNavHighlight = () => document.querySelectorAll('#main-nav a').forEach(a => a.classList.toggle('bg-indigo-100', a.dataset.view === state.currentView));
-        
-        const handleLogin = async e => { e.preventDefault(); try { const data = await apiRequest('/login', 'POST', { email: document.getElementById('login-email').value, password: document.getElementById('login-password').value }); localStorage.setItem('feedbackHubToken', data.token); state.currentUser = data.user; initializeApp(); } catch(err) { document.getElementById('login-error').textContent = err.message; }};
-        const handleSignup = async (e) => { e.preventDefault(); const formData = new FormData(e.target); const data = Object.fromEntries(formData.entries()); const errorEl = document.getElementById('signup-error'); errorEl.textContent = ''; if (data.password !== data.confirmPassword) { errorEl.textContent = 'As senhas não coincidem.'; return; } try { const result = await apiRequest('/register', 'POST', data); alert(result.message); showScreen('login'); e.target.reset(); } catch (error) { errorEl.textContent = error.message; }};
-        const handleLogout = () => { localStorage.removeItem('feedbackHubToken'); state.currentUser = null; showScreen('login'); };
+        const checkSession = async () => { 
+            // Verifica se há um token de autenticação
+            if (localStorage.getItem('feedbackHubToken')) {
+                try {
+                    // Em produção, faça uma chamada para validar o token
+                    // state.currentUser = await apiRequest('/profile');
+                    
+                    // Simulação de usuário logado
+                    state.currentUser = {
+                        id: 1,
+                        name: 'Usuário Teste',
+                        email: 'teste@exemplo.com',
+                        role: 'usuario'
+                    };
+                    
+                    initializeApp(); 
+                } catch (error) { 
+                    console.error('Erro na sessão:', error);
+                    handleLogout(); 
+                } 
+            } else {
+                // Se não houver token, mostra a tela de login
+                showScreen('login');
+            }
+        };
 
-        const checkSession = async () => { if (localStorage.getItem('feedbackHubToken')) { try { state.currentUser = await apiRequest('/profile'); initializeApp(); } catch (error) { handleLogout(); } } };
-
-        const initializeApp = () => { renderNav(); showScreen('app'); showView('dashboard'); };
+        const initializeApp = () => { 
+            // Renderiza o menu de navegação
+            renderNav(); 
+            
+            // Mostra a tela do app
+            showScreen('app'); 
+            
+            // Mostra a view inicial (dashboard)
+            showView('dashboard'); 
+            
+            // Atualiza o nome do usuário na interface
+            const userNameElement = document.getElementById('user-name');
+            if (userNameElement && state.currentUser) {
+                userNameElement.textContent = state.currentUser.name;
+            }
+        };
 
         const renderNav = () => {
             let navItems = `<a href="#" data-view="dashboard" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100"><i data-lucide="layout-dashboard"></i> Dashboard</a>`;
@@ -115,23 +639,84 @@
 
         const openEditModal = (userId) => { const user = state.allUsers.find(u => u.id === userId); if (!user) return; document.getElementById('edit-user-id').value = user.id; document.getElementById('edit-user-name').value = user.name; document.getElementById('edit-user-email').value = user.email; document.getElementById('edit-user-department').value = user.department; document.getElementById('edit-user-role').value = user.role; document.getElementById('edit-user-active').checked = user.isActive; editUserModal.classList.add('active'); };
 
-        // Event Listeners
-        document.getElementById('login-form').addEventListener('submit', handleLogin);
-        document.getElementById('signup-form').addEventListener('submit', handleSignup);
-        document.getElementById('go-to-signup').addEventListener('click', e => { e.preventDefault(); showScreen('signup'); });
-        document.getElementById('go-to-login').addEventListener('click', e => { e.preventDefault(); showScreen('login'); });
-        document.getElementById('logout-button').addEventListener('click', handleLogout);
-        
-        document.getElementById('feedback-form').addEventListener('submit', async e => { e.preventDefault(); try { await apiRequest('/feedbacks', 'POST', { toUserId: document.getElementById('feedback-recipient').value, title: document.getElementById('feedback-title').value, classification: document.querySelector('input[name="classification"]:checked').value, description: document.getElementById('feedback-description').value, anonymous: document.getElementById('feedback-anonymous').checked }); document.getElementById('feedback-success').textContent = 'Feedback enviado com sucesso!'; setTimeout(() => document.getElementById('feedback-success').textContent = '', 3000); e.target.reset(); } catch(err) { alert(err.message); } });
-        document.getElementById('profile-photo-form').addEventListener('submit', async e => { e.preventDefault(); const file = document.getElementById('profile-photo-upload').files[0]; if (!file) { alert('Por favor, selecione um arquivo.'); return; } const formData = new FormData(); formData.append('profilePic', file); try { const { user } = await apiRequest('/profile/upload-photo', 'POST', formData); state.currentUser = { ...state.currentUser, photoUrl: user.photoUrl }; renderProfile(); alert('Foto atualizada!'); } catch(err) { alert(err.message); }});
-        document.getElementById('profile-details-form').addEventListener('submit', async e => { e.preventDefault(); try { const { user } = await apiRequest('/profile', 'PUT', { name: document.getElementById('profile-name').value }); state.currentUser.name = user.name; renderProfile(); alert('Nome atualizado!'); } catch(err) { alert(err.message); }});
-        document.getElementById('admin-users-table-body').addEventListener('click', e => { if (e.target.classList.contains('edit-user-btn')) openEditModal(parseInt(e.target.dataset.userid)); if (e.target.classList.contains('delete-user-btn')) { if(confirm('Tem certeza que deseja excluir este usuário? Isso removerá TODOS os feedbacks enviados e recebidos por ele.')) { apiRequest(`/admin/users/${e.target.dataset.userid}`, 'DELETE').then(renderAdminUsers); } } });
-        document.getElementById('cancel-edit-user').addEventListener('click', () => editUserModal.classList.remove('active'));
-        document.getElementById('edit-user-form').addEventListener('submit', async e => { e.preventDefault(); const id = document.getElementById('edit-user-id').value; const data = { name: document.getElementById('edit-user-name').value, email: document.getElementById('edit-user-email').value, department: document.getElementById('edit-user-department').value, role: document.getElementById('edit-user-role').value, isActive: document.getElementById('edit-user-active').checked }; try { await apiRequest(`/admin/users/${id}`, 'PUT', data); editUserModal.classList.remove('active'); renderAdminUsers(); } catch(err) { alert(err.message); } });
-        document.getElementById('reset-password-form').addEventListener('submit', async e => { e.preventDefault(); const id = document.getElementById('edit-user-id').value; const newPassword = document.getElementById('reset-password-input').value; try { const res = await apiRequest(`/admin/users/${id}/reset-password`, 'POST', { newPassword }); alert(res.message); document.getElementById('reset-password-input').value = ''; } catch(err) { alert(err.message); } });
-
-        checkSession();
-    });
+        // Inicialização da aplicação
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM carregado, inicializando...');
+            
+            // Inicializa o estado da aplicação
+            state.init();
+            
+            // Inicializa os ícones do Lucide
+            lucide.createIcons();
+            
+            // Adiciona event listeners para navegação
+            document.getElementById('go-to-signup')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Navegando para cadastro');
+                state.showScreen('signup');
+            });
+            
+            document.getElementById('go-to-login')?.addEventListener('click', (e) => {
+                e.preventDefault();
+                console.log('Navegando para login');
+                state.showScreen('login');
+            });
+            
+            // Adiciona event listeners para formulários
+            document.getElementById('login-form')?.addEventListener('submit', (e) => state.handleLogin(e));
+            document.getElementById('signup-form')?.addEventListener('submit', (e) => state.handleSignup(e));
+            document.getElementById('logout-button')?.addEventListener('click', () => state.handleLogout());
+            
+            // Verifica a sessão do usuário
+            state.checkSession();
+            
+            // Configura os itens do menu de navegação
+            const navLinks = `
+                <a href="#" data-view="dashboard" class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
+                    Dashboard
+                </a>
+                <a href="#" data-view="team" class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100">
+                    <i data-lucide="users" class="w-5 h-5 mr-3"></i>
+                    Minha Equipe
+                </a>
+                <a href="#" data-view="send-feedback" class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100">
+                    <i data-lucide="message-square" class="w-5 h-5 mr-3"></i>
+                    Enviar Feedback
+                </a>
+                <a href="#" data-view="reports" class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100">
+                    <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
+                    Relatórios
+                </a>
+                <a href="#" data-view="profile" class="flex items-center px-4 py-3 rounded-lg hover:bg-gray-100">
+                    <i data-lucide="user" class="w-5 h-5 mr-3"></i>
+                    Meu Perfil
+                </a>
+            `;
+            
+            const navElement = document.getElementById('main-nav');
+            if (navElement) {
+                navElement.innerHTML = navLinks;
+                
+                // Adiciona event listeners para os links de navegação
+                navElement.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const view = link.dataset.view;
+                        if (view) {
+                            state.activeView = view;
+                            showView(view);
+                        }
+                    });
+                });
+            }
+            
+            // Garante que pelo menos a tela de login esteja visível
+            if (!document.querySelector('.app-screen.active')) {
+                console.log('Nenhuma tela ativa, mostrando login...');
+                state.showScreen('login');
+            }
+        });
     </script>
 </body>
 </html>
