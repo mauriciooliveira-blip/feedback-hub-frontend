@@ -441,14 +441,53 @@
                     console.log('Navegando para Configurações');
                 });
                 
-                // Mostrar dashboard por padrão ao fazer login
-                document.getElementById('login-form')?.addEventListener('submit', function(e) {
-                    e.preventDefault();
-                    showScreen('app');
-                    setActiveMenuItem('dashboard-link');
-                    showContent('dashboard-content');
-                    initializeCharts();
-                });
+                // Configurar o formulário de login
+                const loginForm = document.getElementById('login-form');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', function(e) {
+                        e.preventDefault();
+                        console.log('Tentando fazer login...');
+                        
+                        // Obter valores do formulário
+                        const email = document.getElementById('email')?.value;
+                        const password = document.getElementById('password')?.value;
+                        
+                        // Validação simples
+                        if (!email || !password) {
+                            alert('Por favor, preencha todos os campos!');
+                            return;
+                        }
+                        
+                        // Simular autenticação (substituir por chamada à API real)
+                        console.log('Email:', email);
+                        console.log('Senha:', password.replace(/./g, '*'));
+                        
+                        // Mostrar loading
+                        const submitBtn = loginForm.querySelector('button[type="submit"]');
+                        const originalBtnText = submitBtn.innerHTML;
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = 'Entrando...';
+                        
+                        // Simular atraso de rede
+                        setTimeout(() => {
+                            // Aqui você faria a chamada real para a API
+                            // Por enquanto, vamos simular um login bem-sucedido
+                            console.log('Login bem-sucedido!');
+                            
+                            // Mostrar o app
+                            showScreen('app');
+                            setActiveMenuItem('dashboard-link');
+                            showContent('dashboard-content');
+                            initializeCharts();
+                            
+                            // Resetar o formulário
+                            loginForm.reset();
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = originalBtnText;
+                            
+                        }, 1500); // 1.5 segundos de atraso
+                    });
+                }
             }
             
             // Inicializar navegação
